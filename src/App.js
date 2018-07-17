@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import SimpleStorageContract from '../build/contracts/SimpleStorage.json'
 import getWeb3 from './utils/getWeb3'
+import { Header } from 'semantic-ui-react'
 
 class App extends Component {
   constructor(props) {
@@ -68,6 +69,7 @@ class App extends Component {
         <nav className="navbar pure-menu pure-menu-horizontal">
             <a href="#" className="pure-menu-heading pure-menu-link">Truffle Box</a>
         </nav>
+        <Header size="huge">HEADER</Header>
 
         <main className="container">
           <div className="pure-g">
