@@ -24,11 +24,29 @@ contract Betchya is Ownable {
   }
 
   /**
+  * @dev Only allow function to be executed if bet is in stage "Accepted"
+  * @param betsIndex Current bet's element index in the bets array
+  */
+  modifier onlyInAcceptedStage(uint betsIndex) {
+    require(bets[betsIndex].stage == BetStages.Accepted);
+    _;
+  }
+
+  /**
   * @dev Only allow function to be executed if it's called by the acceptor of the bet
   * @param betsIndex Current bet's element index in the bets array
   */
   modifier onlyAcceptor(uint betsIndex) {
     require(bets[betsIndex].acceptor == msg.sender);
+    _;
+  }
+
+  /**
+  * @dev Only allow function to be executed if it's called by the judge of the bet
+  * @param betsIndex Current bet's element index in the bets array
+  */
+  modifier onlyJudge(uint betsIndex) {
+    require(bets[betsIndex].judge == msg.sender);
     _;
   }
 
@@ -46,12 +64,22 @@ contract Betchya is Ownable {
     uint256 betsIndex
   );
 
+
+  /*
+  * @dev Event confirming that the bet has been accepted by the acceptor and matching amount has been transferred
+  * @param betsIndex Current bet's element index in the bets array
+  */
   event BetAccepted(
     uint256 indexed betsIndex
   );
 
-  // TODO: implement
-  event BetJudgeConfirmed();
+  /*
+  * @dev Event confirming that the juge has confirmed to jugde the bet
+  * @param betsIndex Current bet's element index in the bets array
+  */
+  event BetJudgeConfirmed(
+    uint256 indexed betsIndex
+  );
 
   Bet[] public bets;
 
@@ -62,7 +90,10 @@ contract Betchya is Ownable {
   * @param acceptor Address of the person being challenged
   * @param judge Address of the person judging the challenge
   */
-  function createBet(address acceptor, address judge) public payable {
+  function createBet(address acceptor, address judge)
+    public
+    payable
+  {
     // Require bet of some ETH
     require(msg.value != 0);
     // Acceptor and jugde can't be 0x0
@@ -73,13 +104,12 @@ contract Betchya is Ownable {
 
 
     uint index =  bets.push(bet) - 1;
-    // TODO: how to handle spam making array too big?
     proposerToBetIndex[acceptor].push(index);
     emit BetCreated(msg.sender, acceptor, judge, index);
   }
 
   /**
-  * @dev Accepts a bet if called by acceptor and value sent is the same as the proposer
+  * @dev Accepts a bet if called by acceptor, value sent is the same as the proposer and stage is "Created"
   * @param betsIndex Current bet's element index in the bets array
   */
   function acceptBet(uint betsIndex)
@@ -96,5 +126,20 @@ contract Betchya is Ownable {
     // Transition into "Accepted" stage
     bet.stage = BetStages.Accepted;
     emit BetAccepted(betsIndex);
+  }
+
+  /**
+  * @dev Confirms the judge of the bet if called by the assigned juge and stage is "Accepted"
+  * @param betsIndex Current bet's element index in the bets array
+  */
+  function confirmJudge(uint betsIndex)
+    public
+    onlyInAcceptedStage(betsIndex)
+    onlyJudge(betsIndex)
+  {
+    Bet storage bet = bets[betsIndex];
+
+    bet.stage = BetStages.InProgress;
+    emit BetJudgeConfirmed(betsIndex);
   }
 }
