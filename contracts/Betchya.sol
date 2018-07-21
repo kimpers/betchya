@@ -4,11 +4,32 @@ import "zeppelin/ownership/Ownable.sol";
 
 /** @title Betchya */
 contract Betchya is Ownable {
+  enum BetStages { Created, Accepted, InProgress, Completed  }
+
   struct Bet {
     address proposer;
     address acceptor;
     address judge;
     uint256 amount;
+    BetStages stage;
+  }
+
+  /**
+  * @dev Only allow function to be executed if bet is in stage "Created"
+  * @param betsIndex Current bet's element index in the bets array
+  */
+  modifier onlyInCreatedStage(uint betsIndex) {
+    require(bets[betsIndex].stage == BetStages.Created);
+    _;
+  }
+
+  /**
+  * @dev Only allow function to be executed if it's called by the acceptor of the bet
+  * @param betsIndex Current bet's element index in the bets array
+  */
+  modifier onlyAcceptor(uint betsIndex) {
+    require(bets[betsIndex].acceptor == msg.sender);
+    _;
   }
 
   /*
@@ -25,8 +46,11 @@ contract Betchya is Ownable {
     uint256 betsIndex
   );
 
+  event BetAccepted(
+    uint256 indexed betsIndex
+  );
+
   // TODO: implement
-  event BetAccepted();
   event BetJudgeConfirmed();
 
   Bet[] public bets;
@@ -45,12 +69,32 @@ contract Betchya is Ownable {
     require(acceptor != address(0));
     require(judge != address(0));
 
-    Bet memory bet = Bet(msg.sender, acceptor, judge, msg.value);
+    Bet memory bet = Bet(msg.sender, acceptor, judge, msg.value, BetStages.Created);
 
 
     uint index =  bets.push(bet) - 1;
     // TODO: how to handle spam making array too big?
     proposerToBetIndex[acceptor].push(index);
     emit BetCreated(msg.sender, acceptor, judge, index);
+  }
+
+  /**
+  * @dev Accepts a bet if called by acceptor and value sent is the same as the proposer
+  * @param betsIndex Current bet's element index in the bets array
+  */
+  function acceptBet(uint betsIndex)
+    public
+    onlyInCreatedStage(betsIndex)
+    onlyAcceptor(betsIndex)
+    payable
+  {
+    Bet storage bet = bets[betsIndex];
+
+    // Acceptor needs to send same amount as proposer
+    require(msg.value == bet.amount);
+
+    // Transition into "Accepted" stage
+    bet.stage = BetStages.Accepted;
+    emit BetAccepted(betsIndex);
   }
 }
