@@ -1,15 +1,19 @@
 /* global assert, artifacts, contract */
 const Betchya = artifacts.require("./Betchya.sol");
 
-const stages = ["Created", "Accepted", "InProgress", "Completed "];
+const stages = ["Created", "Accepted", "InProgress", "Settled"];
 const toStage = num => stages[num];
+const results = ["NotSettled", "ProposerWon", "AcceptorWon", "Draw"];
+const toResult = num => results[num];
+const resultNameToValue = name => results.indexOf(name);
 
-const toBetObject = ([proposer, acceptor, judge, amount, stage]) => ({
+const toBetObject = ([proposer, acceptor, judge, amount, stage, result]) => ({
   proposer,
   acceptor,
   judge,
   amount: amount.toString(),
-  stage: toStage(stage)
+  stage: toStage(stage),
+  result: toResult(result)
 });
 
 const assertFailed = async promiseFn => {
@@ -62,7 +66,11 @@ contract("Betchya", accounts => {
         "Acceptor address is correctly set"
       );
 
-      assert.equal(eventArgs.judge, judge, "Judge addres is correctly set");
+      assert.equal(eventArgs.judge, judge, "Judge address is correctly set");
+
+      const bet = await betchya.bets.call(betIndex).then(toBetObject);
+      assert.equal(bet.stage, "Created");
+      assert.equal(bet.result, "NotSettled");
     });
   });
 
@@ -98,6 +106,11 @@ contract("Betchya", accounts => {
       await assertFailed(() =>
         betchya.acceptBet(betIndex, { from: otherAccount, value: 1 })
       );
+
+      // Assert no change in bet state
+      const bet = await betchya.bets.call(betIndex).then(toBetObject);
+      assert.equal(bet.stage, "Created");
+      assert.equal(bet.result, "NotSettled");
     });
 
     it("it should fail if acceptor does not send the same amount as proposer ", async () => {
@@ -113,6 +126,11 @@ contract("Betchya", accounts => {
       await assertFailed(() =>
         betchya.acceptBet(betIndex, { from: acceptor, value: 0 })
       );
+
+      // Assert no change in bet state
+      const bet = await betchya.bets.call(betIndex).then(toBetObject);
+      assert.equal(bet.stage, "Created");
+      assert.equal(bet.result, "NotSettled");
     });
   });
 
@@ -156,6 +174,96 @@ contract("Betchya", accounts => {
       await assertFailed(() =>
         betchya.confirmJudge(betIndex, { from: otherAccount })
       );
+
+      // Assert no change in bet state
+      const bet = await betchya.bets.call(betIndex).then(toBetObject);
+      assert.equal(bet.stage, "Accepted");
+      assert.equal(bet.result, "NotSettled");
+    });
+  });
+
+  describe("settleBet", () => {
+    it("should settle bet if called by the judge", async () => {
+      const betSettledWatcher = betchya.BetSettled();
+      // Create, accept bet, accept judge before settling bet
+      await betchya.createBet(acceptor, judge, {
+        from: proposer,
+        value: 1
+      });
+
+      await betchya.acceptBet(betIndex, {
+        from: acceptor,
+        value: 1
+      });
+
+      await betchya.confirmJudge(betIndex, { from: judge });
+
+      const betResult = "ProposerWon";
+      await betchya.settleBet(betIndex, resultNameToValue(betResult), {
+        from: judge
+      });
+
+      const events = await betSettledWatcher.get();
+      assert.equal(events.length, 1, "1 BetSettled event emitted");
+      assert.equal(events[0].args.betsIndex, betIndex, "betIndex is unchanged");
+
+      const bet = await betchya.bets.call(betIndex).then(toBetObject);
+      assert.equal(bet.stage, "Settled");
+      assert.equal(bet.result, betResult);
+    });
+
+    it("should not settle bet if called anyone other than the judge", async () => {
+      // Create, accept bet, accept judge before settling bet
+      await betchya.createBet(acceptor, judge, {
+        from: proposer,
+        value: 1
+      });
+
+      await betchya.acceptBet(betIndex, {
+        from: acceptor,
+        value: 1
+      });
+
+      await betchya.confirmJudge(betIndex, { from: judge });
+
+      const betResult = "ProposerWon";
+      assertFailed(() =>
+        betchya.settleBet(betIndex, resultNameToValue(betResult), {
+          from: otherAccount
+        })
+      );
+
+      // Assert no change in bet state
+      const bet = await betchya.bets.call(betIndex).then(toBetObject);
+      assert.equal(bet.stage, "InProgress");
+      assert.equal(bet.result, "NotSettled");
+    });
+
+    it("should not settle bet if judge is trying to set result to NotSettled", async () => {
+      // Create, accept bet, accept judge before settling bet
+      await betchya.createBet(acceptor, judge, {
+        from: proposer,
+        value: 1
+      });
+
+      await betchya.acceptBet(betIndex, {
+        from: acceptor,
+        value: 1
+      });
+
+      await betchya.confirmJudge(betIndex, { from: judge });
+
+      const betResult = "NotSettled";
+      assertFailed(() =>
+        betchya.settleBet(betIndex, resultNameToValue(betResult), {
+          from: judge
+        })
+      );
+
+      // Assert no change in bet state
+      const bet = await betchya.bets.call(betIndex).then(toBetObject);
+      assert.equal(bet.stage, "InProgress");
+      assert.equal(bet.result, "NotSettled");
     });
   });
 });

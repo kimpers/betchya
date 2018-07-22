@@ -4,7 +4,8 @@ import "zeppelin/ownership/Ownable.sol";
 
 /** @title Betchya */
 contract Betchya is Ownable {
-  enum BetStages { Created, Accepted, InProgress, Completed  }
+  enum BetStages { Created, Accepted, InProgress, Settled  }
+  enum BetResults { NotSettled, ProposerWon, AcceptorWon, Draw }
 
   struct Bet {
     address proposer;
@@ -12,6 +13,7 @@ contract Betchya is Ownable {
     address judge;
     uint256 amount;
     BetStages stage;
+    BetResults result;
   }
 
   /**
@@ -29,6 +31,15 @@ contract Betchya is Ownable {
   */
   modifier onlyInAcceptedStage(uint betsIndex) {
     require(bets[betsIndex].stage == BetStages.Accepted);
+    _;
+  }
+
+  /**
+  * @dev Only allow function to be executed if bet is in stage "InProgress"
+  * @param betsIndex Current bet's element index in the bets array
+  */
+  modifier onlyInProgressStage(uint betsIndex) {
+    require(bets[betsIndex].stage == BetStages.InProgress);
     _;
   }
 
@@ -81,6 +92,14 @@ contract Betchya is Ownable {
     uint256 indexed betsIndex
   );
 
+  /*
+  * @dev Event confirming that the juge has settled the result of the bet
+  * @param betsIndex Current bet's element index in the bets array
+  */
+  event BetSettled(
+    uint256 indexed betsIndex
+  );
+
   Bet[] public bets;
 
   mapping(address => uint[]) public proposerToBetIndex;
@@ -100,7 +119,7 @@ contract Betchya is Ownable {
     require(acceptor != address(0));
     require(judge != address(0));
 
-    Bet memory bet = Bet(msg.sender, acceptor, judge, msg.value, BetStages.Created);
+    Bet memory bet = Bet(msg.sender, acceptor, judge, msg.value, BetStages.Created, BetResults.NotSettled);
 
 
     uint index =  bets.push(bet) - 1;
@@ -129,7 +148,7 @@ contract Betchya is Ownable {
   }
 
   /**
-  * @dev Confirms the judge of the bet if called by the assigned juge and stage is "Accepted"
+  * @dev Confirms the judge of the bet if called by the assigned judge and stage is "Accepted"
   * @param betsIndex Current bet's element index in the bets array
   */
   function confirmJudge(uint betsIndex)
@@ -141,5 +160,26 @@ contract Betchya is Ownable {
 
     bet.stage = BetStages.InProgress;
     emit BetJudgeConfirmed(betsIndex);
+  }
+
+  /**
+  * @dev Settles the results of a bet if called by the assigned jugde and stage is "InProgress"
+  * @param betsIndex Current bet's element index in the bets array
+  * @param result Result of the bet, valid results ProposerWon, AcceptorWon, Draw
+  */
+  function settleBet(uint betsIndex, BetResults result)
+    public
+    onlyInProgressStage(betsIndex)
+    onlyJudge(betsIndex)
+  {
+    // Don't allow jugde to settle as "NotSettled"
+    require(result != BetResults.NotSettled);
+
+    Bet storage bet = bets[betsIndex];
+
+    bet.result = result;
+    bet.stage = BetStages.Settled;
+
+    emit BetSettled(betsIndex);
   }
 }
