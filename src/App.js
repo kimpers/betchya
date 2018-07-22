@@ -1,7 +1,25 @@
 import React, { Component } from "react";
-import SimpleStorageContract from "../build/contracts/SimpleStorage.json";
+import BetchyaContract from "../build/contracts/Betchya.json";
 import getWeb3 from "./utils/getWeb3";
+import styled from "styled-components";
 import { Header } from "semantic-ui-react";
+
+import BetForm from "./components/BetForm";
+
+const AppWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  background: #a1d2ce;
+`;
+
+const AppHeader = styled(Header)`
+  display: inline-block;
+  color: rgba(0, 0, 0, 0.6) !important;
+`;
 
 class App extends Component {
   constructor(props) {
@@ -32,70 +50,39 @@ class App extends Component {
   }
 
   instantiateContract() {
-    /*
-     * SMART CONTRACT EXAMPLE
-     *
-     * Normally these functions would be called in the context of a
-     * state management library, but for convenience I've placed them here.
-     */
-
     const contract = require("truffle-contract");
-    const simpleStorage = contract(SimpleStorageContract);
-    simpleStorage.setProvider(this.state.web3.currentProvider);
+    const betchya = contract(BetchyaContract);
+    betchya.setProvider(this.state.web3.currentProvider);
 
     // Declaring this for later so we can chain functions on SimpleStorage.
-    var simpleStorageInstance;
+    let betchyaInstance;
 
     // Get accounts.
     this.state.web3.eth.getAccounts((error, accounts) => {
-      simpleStorage
-        .deployed()
-        .then(instance => {
-          simpleStorageInstance = instance;
-
-          // Stores a given value, 5 by default.
-          return simpleStorageInstance.set(5, { from: accounts[0] });
-        })
-        .then(result => {
-          // Get the value from the contract to prove it worked.
-          return simpleStorageInstance.get.call(accounts[0]);
-        })
-        .then(result => {
-          // Update state with the result.
-          return this.setState({ storageValue: result.c[0] });
-        });
+      //betchya
+      //.deployed()
+      //.then(instance => {
+      //betchyaInstance = instance;
+      //// Stores a given value, 5 by default.
+      //return betchyaInstance.set(5, { from: accounts[0] });
+      //})
+      //.then(result => {
+      //// Get the value from the contract to prove it worked.
+      //return betchyaInstance.get.call(accounts[0]);
+      //})
+      //.then(result => {
+      //// Update state with the result.
+      //return this.setState({ storageValue: result.c[0] });
+      //});
     });
   }
 
   render() {
     return (
-      <div className="App">
-        <nav className="navbar pure-menu pure-menu-horizontal">
-          <a href="#" className="pure-menu-heading pure-menu-link">
-            Truffle Box
-          </a>
-        </nav>
-        <Header size="huge">HEADER</Header>
-
-        <main className="container">
-          <div className="pure-g">
-            <div className="pure-u-1-1">
-              <h1>Good to Go!</h1>
-              <p>Your Truffle Box is installed and ready.</p>
-              <h2>Smart Contract Example</h2>
-              <p>
-                If your contracts compiled and migrated successfully, below will
-                show a stored value of 5 (by default).
-              </p>
-              <p>
-                Try changing the value stored on <strong>line 59</strong> of
-                App.js.
-              </p>
-              <p>The stored value is: {this.state.storageValue}</p>
-            </div>
-          </div>
-        </main>
-      </div>
+      <AppWrapper>
+        <AppHeader size="huge">Betchya.eth - challenge your friends!</AppHeader>
+        <BetForm />
+      </AppWrapper>
     );
   }
 }
