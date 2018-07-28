@@ -1,20 +1,7 @@
 /* global assert, artifacts, contract */
 const Betchya = artifacts.require("./Betchya.sol");
 
-const stages = ["Created", "Accepted", "InProgress", "Settled"];
-const toStage = num => stages[num];
-const results = ["NotSettled", "ProposerWon", "AcceptorWon", "Draw"];
-const toResult = num => results[num];
-const resultNameToValue = name => results.indexOf(name);
-
-const toBetObject = ([proposer, acceptor, judge, amount, stage, result]) => ({
-  proposer,
-  acceptor,
-  judge,
-  amount: amount.toString(),
-  stage: toStage(stage),
-  result: toResult(result)
-});
+import { resultNameToValue, toBetObject } from "../src/lib/contractUtils";
 
 const assertFailed = async promiseFn => {
   try {
@@ -264,6 +251,20 @@ contract("Betchya", accounts => {
       const bet = await betchya.bets.call(betIndex).then(toBetObject);
       assert.equal(bet.stage, "InProgress");
       assert.equal(bet.result, "NotSettled");
+    });
+  });
+
+  describe("getProposerBetsLength", () => {
+    it("should return the correct length", async () => {
+      let length = await betchya.getProposerBetsLength(proposer);
+      assert.equal(length, 0, "No bets initially");
+      await betchya.createBet(acceptor, judge, {
+        from: proposer,
+        value: 1
+      });
+
+      length = await betchya.getProposerBetsLength(proposer);
+      assert.equal(length, 1, "1 after 1 bet is made");
     });
   });
 });

@@ -103,6 +103,16 @@ contract Betchya is Ownable {
   Bet[] public bets;
 
   mapping(address => uint[]) public proposerToBetIndex;
+  mapping(address => uint[]) public acceptorToBetIndex;
+  mapping(address => uint[]) public judgeToBetIndex;
+
+  function getProposerBetsLength(address proposer)
+    public
+    view
+    returns (uint)
+  {
+    return proposerToBetIndex[proposer].length;
+  }
 
   /**
   * @dev Creates a bet between the sender and acceptor
@@ -122,8 +132,12 @@ contract Betchya is Ownable {
     Bet memory bet = Bet(msg.sender, acceptor, judge, msg.value, BetStages.Created, BetResults.NotSettled);
 
 
+
     uint index =  bets.push(bet) - 1;
-    proposerToBetIndex[acceptor].push(index);
+    proposerToBetIndex[msg.sender].push(index);
+    acceptorToBetIndex[acceptor].push(index);
+    judgeToBetIndex[judge].push(index);
+
     emit BetCreated(msg.sender, acceptor, judge, index);
   }
 
