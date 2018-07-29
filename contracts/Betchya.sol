@@ -102,16 +102,29 @@ contract Betchya is Ownable {
 
   Bet[] public bets;
 
-  mapping(address => uint[]) public proposerToBetIndex;
-  mapping(address => uint[]) public acceptorToBetIndex;
-  mapping(address => uint[]) public judgeToBetIndex;
+  /**
+  * @dev Different roles a user can have when participating in a bet
+  */
+  enum ParticipantType { Proposer, Acceptor, Judge }
 
-  function getProposerBetsLength(address proposer)
+  struct BetParticipation {
+    uint256 betIndex;
+    ParticipantType participantType;
+  }
+
+  mapping(address => BetParticipation[]) public addressToBetParticipation;
+
+
+  /**
+  * @dev Returns the number of bets that the user is participating in
+  * @param user address
+  */
+  function getUserBetParticipationsLength(address user)
     public
     view
     returns (uint)
   {
-    return proposerToBetIndex[proposer].length;
+    return addressToBetParticipation[user].length;
   }
 
   /**
@@ -134,9 +147,10 @@ contract Betchya is Ownable {
 
 
     uint index =  bets.push(bet) - 1;
-    proposerToBetIndex[msg.sender].push(index);
-    acceptorToBetIndex[acceptor].push(index);
-    judgeToBetIndex[judge].push(index);
+    // Add all the participants to BetParticipation mapping
+    addressToBetParticipation[msg.sender].push(BetParticipation(index, ParticipantType.Proposer));
+    addressToBetParticipation[acceptor].push(BetParticipation(index, ParticipantType.Acceptor));
+    addressToBetParticipation[judge].push(BetParticipation(index, ParticipantType.Judge));
 
     emit BetCreated(msg.sender, acceptor, judge, index);
   }

@@ -254,16 +254,16 @@ contract("Betchya", accounts => {
     });
   });
 
-  describe("getProposerBetsLength", () => {
+  describe("getUserBetParticipationsLength", () => {
     it("should return the correct length", async () => {
-      let length = await betchya.getProposerBetsLength(proposer);
+      let length = await betchya.getUserBetParticipationsLength(proposer);
       assert.equal(length, 0, "No bets initially");
       await betchya.createBet(acceptor, judge, {
         from: proposer,
         value: 1
       });
 
-      length = await betchya.getProposerBetsLength(proposer);
+      length = await betchya.getUserBetParticipationsLength(proposer);
       assert.equal(length, 1, "1 after 1 bet is made");
     });
   });
