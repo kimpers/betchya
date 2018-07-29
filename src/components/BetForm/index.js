@@ -15,17 +15,17 @@ class BetForm extends Component {
   };
 
   handleCreateBet = () => {
-    const { contractMethods } = this.props;
+    const { betchyaContract } = this.props;
     const { acceptorAddress, judgeAddress } = this.state;
 
-    if (contractMethods && acceptorAddress && judgeAddress) {
-      contractMethods.createBet(
+    if (betchyaContract && acceptorAddress && judgeAddress) {
+      betchyaContract.createBet(
         acceptorAddress,
         judgeAddress,
         this.state.value
       );
     } else {
-      console.error(contractMethods, acceptorAddress, judgeAddress);
+      console.error(betchyaContract, acceptorAddress, judgeAddress);
     }
   };
 

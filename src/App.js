@@ -1,11 +1,12 @@
 import React, { Component } from "react";
-import BetchyaContract from "../build/contracts/Betchya.json";
 import getWeb3 from "./utils/getWeb3";
 import styled from "styled-components";
 import { Header, Message } from "semantic-ui-react";
 
+import BetchyaContractDefinition from "../build/contracts/Betchya.json";
+
 import BetForm from "./components/BetForm";
-import { toBetObject } from "./lib/contractUtils";
+import BetchyaContract from "./lib/BetchyaContract";
 
 const AppWrapper = styled.div`
   height: 100%;
@@ -72,49 +73,27 @@ class App extends Component {
   };
 
   instantiateContract = () => {
-    const contract = require("truffle-contract");
-    const betchya = contract(BetchyaContract);
-    betchya.setProvider(this.state.web3.currentProvider);
-
     const { web3 } = this.state;
 
     // Get accounts.
     web3.eth.getAccounts(async (error, accounts) => {
-      const betchyaInstance = await betchya.deployed();
-
-      betchyaInstance.allEvents({}, this.handleEvent);
+      const contract = require("truffle-contract");
       const account = accounts[0];
 
-      const contractMethods = {
-        createBet: (acceptor, judge, value) =>
-          betchyaInstance.createBet(acceptor, judge, {
-            from: account,
-            value: (web3.utils || web3).toWei(value, "ether")
-          }),
-        getAccountBets: async address => {
-          const numProposerBets = await betchyaInstance.getProposerBetsLength
-            .call(address)
-            .then(n => parseInt(n, 10));
+      const betchya = contract(BetchyaContractDefinition);
+      betchya.setProvider(web3.currentProvider);
+      const instance = await betchya.deployed();
+      instance.allEvents({}, this.handleEvent);
 
-          const proposerBets = [];
-          for (let i = 0; i < numProposerBets; i++) {
-            const betIndex = await betchyaInstance.proposerToBetIndex.call(
-              address,
-              i
-            );
-            const bet = await betchyaInstance.bets
-              .call(betIndex)
-              .then(toBetObject);
+      const betchyaContract = new BetchyaContract(web3, instance, account);
 
-            proposerBets.push(bet);
-          }
-
-          return proposerBets;
-        }
-      };
+      const participations = await betchyaContract.getAccountBetParticipations(
+        account
+      );
 
       this.setState({
-        contractMethods
+        betchyaContract,
+        participations
       });
     });
   };
@@ -138,7 +117,7 @@ class App extends Component {
           <AppHeader size="huge">
             Betchya.eth - challenge your friends!
           </AppHeader>
-          <BetForm contractMethods={this.state.contractMethods} />
+          <BetForm betchyaContract={this.state.betchyaContract} />
         </ContentWrapper>
       </AppWrapper>
     );
