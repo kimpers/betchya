@@ -18,7 +18,7 @@ export default class BetchyaContract {
       .call(address)
       .then(n => parseInt(n, 10));
 
-    const bets = { proposer: [], acceptor: [], judge: [] };
+    const bets = [];
     for (let i = 0; i < numBets; i++) {
       const betParticipation = await this.contract.addressToBetParticipation
         .call(address, i)
@@ -28,8 +28,7 @@ export default class BetchyaContract {
         .call(betParticipation.betIndex)
         .then(toBetObject);
 
-      // Split participations up based on role
-      bets[betParticipation.participationType.toLowerCase()].push(bet);
+      bets.push({ ...bet, ...betParticipation });
     }
 
     return bets;

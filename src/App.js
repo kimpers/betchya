@@ -6,6 +6,8 @@ import { Header, Message } from "semantic-ui-react";
 import BetchyaContractDefinition from "../build/contracts/Betchya.json";
 
 import BetForm from "./components/BetForm";
+import BetSelector from "./components/BetSelector";
+
 import BetchyaContract from "./lib/BetchyaContract";
 
 const AppWrapper = styled.div`
@@ -99,7 +101,7 @@ class App extends Component {
   };
 
   render() {
-    const { message } = this.state;
+    const { message, participations } = this.state;
 
     return (
       <AppWrapper>
@@ -114,6 +116,7 @@ class App extends Component {
         )}
 
         <ContentWrapper>
+          <BetSelector participations={participations} />
           <AppHeader size="huge">
             Betchya.eth - challenge your friends!
           </AppHeader>

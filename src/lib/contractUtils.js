@@ -6,7 +6,7 @@ export const resultNameToValue = name => results.indexOf(name);
 export const participationTypes = ["Proposer", "Acceptor", "Judge"];
 export const toParticipationType = num => participationTypes[num];
 export const toBetParticipation = ([betIndex, participationType]) => ({
-  betIndex,
+  betIndex: parseInt(betIndex, 10),
   participationType: toParticipationType(participationType)
 });
 
