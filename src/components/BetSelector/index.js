@@ -20,7 +20,7 @@ const BetSelector = ({ participations }) => {
         marginRight: "20px"
       }}
     >
-      <Dropdown fluid placeholder="Current bets" options={options} />
+      <Dropdown button item placeholder="Current bets" options={options} />
     </div>
   );
 };
