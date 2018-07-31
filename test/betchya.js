@@ -12,6 +12,7 @@ const assertFailed = async promiseFn => {
 
   assert(false, "Did not fail as expected");
 };
+
 contract("Betchya", accounts => {
   // New contract for every test to avoid lingering state
   let betchya;
@@ -26,7 +27,7 @@ contract("Betchya", accounts => {
     it("should create a bet with valid params", async () => {
       const betCreatedWatcher = betchya.BetCreated();
 
-      await betchya.createBet(acceptor, judge, {
+      await betchya.createBet(acceptor, judge, "Challenged!", {
         from: proposer,
         value: 1
       });
@@ -58,6 +59,19 @@ contract("Betchya", accounts => {
       const bet = await betchya.bets.call(betIndex).then(toBetObject);
       assert.equal(bet.stage, "Created");
       assert.equal(bet.result, "NotSettled");
+      assert.equal(bet.description, "Challenged!", "Correct description");
+      assert.equal(bet.proposer, proposer, "Proposer address");
+      assert.equal(bet.acceptor, acceptor, "Acceptor address");
+      assert.equal(bet.judge, judge, "Judge address");
+    });
+
+    it("should fail on bets with empty description", async () => {
+      await assertFailed(() =>
+        betchya.createBet(acceptor, judge, "", {
+          from: proposer,
+          value: 1
+        })
+      );
     });
   });
 
@@ -65,7 +79,7 @@ contract("Betchya", accounts => {
     it("should accept accept a bet if the acceptor calls with valid params", async () => {
       const betAcceptedWatcher = betchya.BetAccepted();
 
-      await betchya.createBet(acceptor, judge, {
+      await betchya.createBet(acceptor, judge, "Challenged!", {
         from: proposer,
         value: 1
       });
@@ -85,7 +99,7 @@ contract("Betchya", accounts => {
     });
 
     it("it should fail if caller is not acceptor", async () => {
-      await betchya.createBet(acceptor, judge, {
+      await betchya.createBet(acceptor, judge, "Challenged!", {
         from: proposer,
         value: 1
       });
@@ -101,7 +115,7 @@ contract("Betchya", accounts => {
     });
 
     it("it should fail if acceptor does not send the same amount as proposer ", async () => {
-      await betchya.createBet(acceptor, judge, {
+      await betchya.createBet(acceptor, judge, "Challenged!", {
         from: proposer,
         value: 1
       });
@@ -126,7 +140,7 @@ contract("Betchya", accounts => {
       const judgeConfirmedWatcher = betchya.BetJudgeConfirmed();
 
       // Create and accept bet before confirming judge
-      await betchya.createBet(acceptor, judge, {
+      await betchya.createBet(acceptor, judge, "Challenged!", {
         from: proposer,
         value: 1
       });
@@ -148,7 +162,7 @@ contract("Betchya", accounts => {
 
     it("should fail if caller is not judge", async () => {
       // Create and accept bet before confirming judge
-      await betchya.createBet(acceptor, judge, {
+      await betchya.createBet(acceptor, judge, "Challenged!", {
         from: proposer,
         value: 1
       });
@@ -173,7 +187,7 @@ contract("Betchya", accounts => {
     it("should settle bet if called by the judge", async () => {
       const betSettledWatcher = betchya.BetSettled();
       // Create, accept bet, accept judge before settling bet
-      await betchya.createBet(acceptor, judge, {
+      await betchya.createBet(acceptor, judge, "Challenged!", {
         from: proposer,
         value: 1
       });
@@ -201,7 +215,7 @@ contract("Betchya", accounts => {
 
     it("should not settle bet if called anyone other than the judge", async () => {
       // Create, accept bet, accept judge before settling bet
-      await betchya.createBet(acceptor, judge, {
+      await betchya.createBet(acceptor, judge, "Challenged!", {
         from: proposer,
         value: 1
       });
@@ -228,7 +242,7 @@ contract("Betchya", accounts => {
 
     it("should not settle bet if judge is trying to set result to NotSettled", async () => {
       // Create, accept bet, accept judge before settling bet
-      await betchya.createBet(acceptor, judge, {
+      await betchya.createBet(acceptor, judge, "Challenged!", {
         from: proposer,
         value: 1
       });
@@ -258,7 +272,7 @@ contract("Betchya", accounts => {
     it("should return the correct length", async () => {
       let length = await betchya.getUserBetParticipationsLength(proposer);
       assert.equal(length, 0, "No bets initially");
-      await betchya.createBet(acceptor, judge, {
+      await betchya.createBet(acceptor, judge, "Challenged!", {
         from: proposer,
         value: 1
       });

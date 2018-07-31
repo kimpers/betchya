@@ -12,6 +12,7 @@ contract Betchya is Ownable {
     address acceptor;
     address judge;
     uint256 amount;
+    string description;
     BetStages stage;
     BetResults result;
   }
@@ -132,7 +133,7 @@ contract Betchya is Ownable {
   * @param acceptor Address of the person being challenged
   * @param judge Address of the person judging the challenge
   */
-  function createBet(address acceptor, address judge)
+  function createBet(address acceptor, address judge, string description)
     public
     payable
   {
@@ -142,7 +143,10 @@ contract Betchya is Ownable {
     require(acceptor != address(0));
     require(judge != address(0));
 
-    Bet memory bet = Bet(msg.sender, acceptor, judge, msg.value, BetStages.Created, BetResults.NotSettled);
+    // Don't allow empty descriptions
+    require(bytes(description).length != 0);
+
+    Bet memory bet = Bet(msg.sender, acceptor, judge, msg.value, description, BetStages.Created, BetResults.NotSettled);
 
 
 
