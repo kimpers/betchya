@@ -8,7 +8,7 @@ export default class BetchyaContract {
   }
 
   createBet = async (acceptor, judge, value) =>
-    this.betchya.createBet(acceptor, judge, {
+    this.contract.createBet(acceptor, judge, {
       from: this.account,
       value: (this.web3.utils || this.web3).toWei(value, "ether")
     });

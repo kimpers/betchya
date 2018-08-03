@@ -7,7 +7,7 @@ const BetSelector = ({ participations }) => {
   }
 
   const options = participations.map(participation => ({
-    text: `[${participation.participationType}] ${participation.betIndex} - ${
+    text: `[ ${participation.role}] ${participation.betsIndex} - ${
       participation.result
     }`,
     value: participation.betIndex

@@ -47,13 +47,13 @@ class App extends Component {
     // See utils/getWeb3 for more info.
 
     getWeb3
-      .then(results => {
-        this.setState({
-          web3: results.web3
-        });
-
+      .then(({ web3 }) => {
         // Instantiate contract once web3 provided.
-        this.instantiateContract();
+        this.instantiateContract(web3);
+
+        this.setState({
+          web3
+        });
       })
       .catch(() => {
         console.log("Error finding web3.");
@@ -74,9 +74,7 @@ class App extends Component {
     }
   };
 
-  instantiateContract = () => {
-    const { web3 } = this.state;
-
+  instantiateContract = web3 => {
     // Get accounts.
     web3.eth.getAccounts(async (error, accounts) => {
       const contract = require("truffle-contract");
@@ -85,13 +83,53 @@ class App extends Component {
       const betchya = contract(BetchyaContractDefinition);
       betchya.setProvider(web3.currentProvider);
       const instance = await betchya.deployed();
-      instance.allEvents({}, this.handleEvent);
+
+      const historyEvents = ["proposer", "acceptor", "judge"].map(role =>
+        instance.BetCreated(
+          {
+            [role]: account
+          },
+          {
+            fromBlock: 0
+          }
+        )
+      );
+
+      const role = participation => {
+        if (participation.proposer === account) {
+          return "proposer";
+        } else if (participation.acceptor === account) {
+          return "acceptor";
+        } else if (participation.judge === account) {
+          return "judge";
+        }
+      };
+      const participations = await Promise.all(
+        historyEvents.map(
+          event =>
+            new Promise((resolve, reject) => {
+              event.get((err, eventLog) => {
+                if (err) {
+                  reject(err);
+                  return;
+                }
+
+                const eventData = eventLog.map(e => ({
+                  ...e.args,
+                  role: role(e.args)
+                }));
+                resolve(eventData);
+              });
+            })
+        )
+      ).then(p => p.reduce((memo, e) => memo.concat(e), []));
+
+      //events.get((err, eventLog) => {
+      //console.log(err, eventLog);
+      ////events.watch(this.handleEvent);
+      //});
 
       const betchyaContract = new BetchyaContract(web3, instance, account);
-
-      const participations = await betchyaContract.getAccountBetParticipations(
-        account
-      );
 
       this.setState({
         betchyaContract,
