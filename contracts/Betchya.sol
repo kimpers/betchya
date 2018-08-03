@@ -12,7 +12,6 @@ contract Betchya is Ownable {
     address acceptor;
     address judge;
     uint256 amount;
-    string description;
     BetStages stage;
     BetResults result;
   }
@@ -73,6 +72,7 @@ contract Betchya is Ownable {
     address indexed proposer,
     address indexed acceptor,
     address indexed judge,
+    string description,
     uint256 betsIndex
   );
 
@@ -104,31 +104,6 @@ contract Betchya is Ownable {
   Bet[] public bets;
 
   /**
-  * @dev Different roles a user can have when participating in a bet
-  */
-  enum ParticipantType { Proposer, Acceptor, Judge }
-
-  struct BetParticipation {
-    uint256 betIndex;
-    ParticipantType participantType;
-  }
-
-  mapping(address => BetParticipation[]) public addressToBetParticipation;
-
-
-  /**
-  * @dev Returns the number of bets that the user is participating in
-  * @param user address
-  */
-  function getUserBetParticipationsLength(address user)
-    public
-    view
-    returns (uint)
-  {
-    return addressToBetParticipation[user].length;
-  }
-
-  /**
   * @dev Creates a bet between the sender and acceptor
   * @param acceptor Address of the person being challenged
   * @param judge Address of the person judging the challenge
@@ -146,17 +121,12 @@ contract Betchya is Ownable {
     // Don't allow empty descriptions
     require(bytes(description).length != 0);
 
-    Bet memory bet = Bet(msg.sender, acceptor, judge, msg.value, description, BetStages.Created, BetResults.NotSettled);
+    Bet memory bet = Bet(msg.sender, acceptor, judge, msg.value, BetStages.Created, BetResults.NotSettled);
 
 
 
     uint index =  bets.push(bet) - 1;
-    // Add all the participants to BetParticipation mapping
-    addressToBetParticipation[msg.sender].push(BetParticipation(index, ParticipantType.Proposer));
-    addressToBetParticipation[acceptor].push(BetParticipation(index, ParticipantType.Acceptor));
-    addressToBetParticipation[judge].push(BetParticipation(index, ParticipantType.Judge));
-
-    emit BetCreated(msg.sender, acceptor, judge, index);
+    emit BetCreated(msg.sender, acceptor, judge, description, index);
   }
 
   /**

@@ -1,4 +1,4 @@
-import React, { Fragment } from "react";
+import React from "react";
 import { Dropdown } from "semantic-ui-react";
 
 const BetSelector = ({ participations }) => {
@@ -6,18 +6,16 @@ const BetSelector = ({ participations }) => {
     return null;
   }
 
-  const options = participations.map(participation => ({
-    text: `[ ${participation.role}] ${participation.betsIndex} - ${
-      participation.result
-    }`,
-    value: participation.betIndex
+  const options = participations.map((participation, i) => ({
+    text: `${participation.description} (${participation.role}) `,
+    value: participation.betIndex,
+    key: `participation-${i}`
   }));
 
   return (
     <div
       style={{
-        alignSelf: "flex-end",
-        marginRight: "20px"
+        alignSelf: "flex-start"
       }}
     >
       <Dropdown button item placeholder="Current bets" options={options} />
