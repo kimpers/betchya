@@ -30,6 +30,12 @@ const AppHeader = styled(Header)`
   color: rgba(0, 0, 0, 0.6) !important;
 `;
 
+const MenuRow = styled.div`
+  width: 100%;
+  max-width: 620px;
+  margin-bottom: 1em;
+`;
+
 class App extends Component {
   constructor(props) {
     super(props);
@@ -116,18 +122,16 @@ class App extends Component {
 
                 const eventData = eventLog.map(e => ({
                   ...e.args,
+                  blockNumber: e.blockNumber,
                   role: role(e.args)
                 }));
                 resolve(eventData);
               });
             })
         )
-      ).then(p => p.reduce((memo, e) => memo.concat(e), []));
-
-      //events.get((err, eventLog) => {
-      //console.log(err, eventLog);
-      ////events.watch(this.handleEvent);
-      //});
+      )
+        .then(p => p.reduce((memo, e) => memo.concat(e), []))
+        .then(l => l.sort((a, b) => b.blockNumber - a.blockNumber));
 
       const betchyaContract = new BetchyaContract(web3, instance, account);
 
@@ -154,10 +158,12 @@ class App extends Component {
         )}
 
         <ContentWrapper>
-          <BetSelector participations={participations} />
           <AppHeader size="huge">
             Betchya.eth - challenge your friends!
           </AppHeader>
+          <MenuRow>
+            <BetSelector participations={participations} />
+          </MenuRow>
           <BetForm betchyaContract={this.state.betchyaContract} />
         </ContentWrapper>
       </AppWrapper>

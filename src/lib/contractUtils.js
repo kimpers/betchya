@@ -15,7 +15,6 @@ export const toBetObject = ([
   acceptor,
   judge,
   amount,
-  description,
   stage,
   result
 ]) => ({
@@ -23,7 +22,6 @@ export const toBetObject = ([
   acceptor,
   judge,
   amount: amount.toString(),
-  description,
   stage: toStage(stage),
   result: toResult(result)
 });

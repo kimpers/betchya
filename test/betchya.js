@@ -59,7 +59,6 @@ contract("Betchya", accounts => {
       const bet = await betchya.bets.call(betIndex).then(toBetObject);
       assert.equal(bet.stage, "Created");
       assert.equal(bet.result, "NotSettled");
-      assert.equal(bet.description, "Challenged!", "Correct description");
       assert.equal(bet.proposer, proposer, "Proposer address");
       assert.equal(bet.acceptor, acceptor, "Acceptor address");
       assert.equal(bet.judge, judge, "Judge address");
@@ -265,20 +264,6 @@ contract("Betchya", accounts => {
       const bet = await betchya.bets.call(betIndex).then(toBetObject);
       assert.equal(bet.stage, "InProgress");
       assert.equal(bet.result, "NotSettled");
-    });
-  });
-
-  describe("getUserBetParticipationsLength", () => {
-    it("should return the correct length", async () => {
-      let length = await betchya.getUserBetParticipationsLength(proposer);
-      assert.equal(length, 0, "No bets initially");
-      await betchya.createBet(acceptor, judge, "Challenged!", {
-        from: proposer,
-        value: 1
-      });
-
-      length = await betchya.getUserBetParticipationsLength(proposer);
-      assert.equal(length, 1, "1 after 1 bet is made");
     });
   });
 });
