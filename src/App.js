@@ -1,40 +1,13 @@
 import React, { Component } from "react";
+import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import getWeb3 from "./utils/getWeb3";
-import styled from "styled-components";
-import { Header, Message } from "semantic-ui-react";
 
 import BetchyaContractDefinition from "../build/contracts/Betchya.json";
 
-import BetForm from "./components/BetForm";
-import BetSelector from "./components/BetSelector";
-
 import BetchyaContract from "./lib/BetchyaContract";
 
-const AppWrapper = styled.div`
-  height: 100%;
-  width: 100%;
-  background: #a1d2ce;
-`;
-
-const ContentWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  width: 100%;
-`;
-
-const AppHeader = styled(Header)`
-  display: inline-block;
-  color: rgba(0, 0, 0, 0.6) !important;
-`;
-
-const MenuRow = styled.div`
-  width: 100%;
-  max-width: 620px;
-  margin-bottom: 1em;
-`;
+import Home from "./pages/Home";
+import Bet from "./pages/Bet";
 
 class App extends Component {
   constructor(props) {
@@ -143,30 +116,26 @@ class App extends Component {
   };
 
   render() {
-    const { message, participations } = this.state;
+    const { message, participations, betchyaContract } = this.state;
 
     return (
-      <AppWrapper>
-        {message && (
-          <Message
-            positive
-            header="Success"
-            onDismiss={() => this.setState({ message: null })}
-          >
-            {message}
-          </Message>
-        )}
-
-        <ContentWrapper>
-          <AppHeader size="huge">
-            Betchya.eth - challenge your friends!
-          </AppHeader>
-          <MenuRow>
-            <BetSelector participations={participations} />
-          </MenuRow>
-          <BetForm betchyaContract={this.state.betchyaContract} />
-        </ContentWrapper>
-      </AppWrapper>
+      <Router>
+        <Switch>
+          <Route path="/:id" component={() => <Bet />} />
+          <Route
+            exact
+            path="/"
+            component={() => (
+              <Home
+                message={message}
+                participations={participations}
+                betchyaContract={betchyaContract}
+                onDismiss={() => this.setState({ message: null })}
+              />
+            )}
+          />
+        </Switch>
+      </Router>
     );
   }
 }
