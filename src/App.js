@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import getWeb3 from "./utils/getWeb3";
 
 import BetchyaContractDefinition from "../build/contracts/Betchya.json";
@@ -7,7 +6,6 @@ import BetchyaContractDefinition from "../build/contracts/Betchya.json";
 import BetchyaContract from "./lib/BetchyaContract";
 
 import Home from "./pages/Home";
-import Bet from "./pages/Bet";
 
 class App extends Component {
   constructor(props) {
@@ -118,24 +116,17 @@ class App extends Component {
   render() {
     const { message, participations, betchyaContract } = this.state;
 
+    if (!betchyaContract) {
+      return null;
+    }
+
     return (
-      <Router>
-        <Switch>
-          <Route path="/:id" component={() => <Bet />} />
-          <Route
-            exact
-            path="/"
-            component={() => (
-              <Home
-                message={message}
-                participations={participations}
-                betchyaContract={betchyaContract}
-                onDismiss={() => this.setState({ message: null })}
-              />
-            )}
-          />
-        </Switch>
-      </Router>
+      <Home
+        message={message}
+        participations={participations}
+        betchyaContract={betchyaContract}
+        onDismiss={() => this.setState({ message: null })}
+      />
     );
   }
 }

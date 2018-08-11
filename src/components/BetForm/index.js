@@ -32,47 +32,71 @@ class BetForm extends Component {
   };
 
   render() {
+    const {
+      disabled,
+      proposerAddress,
+      acceptorAddress,
+      judgeAddress,
+      description,
+      amount
+    } = this.props;
+
     return (
       <div
         style={{
           display: "flex",
-          flexDirection: "column",
-          width: "100%",
-          maxWidth: "620px"
+          flexDirection: "column"
         }}
       >
+        {proposerAddress && (
+          <FormInput
+            label="ETH address of the proposer"
+            fluid
+            disabled={disabled}
+            placeholder="0x123456"
+            defaultValue={proposerAddress ? proposerAddress : null}
+          />
+        )}
         <FormInput
           label="ETH address of the challenged"
           fluid
+          disabled={disabled}
           placeholder="0x123456"
-          defaultValue="0x3dc9310B010bAEC67cBFb9816DB86435DE057Bac"
+          defaultValue={acceptorAddress ? acceptorAddress : null}
           onChange={e => this.setState({ acceptorAddress: e.target.value })}
         />
         <FormInput
           label="ETH address of the judge"
           fluid
+          disabled={disabled}
           placeholder="0x123456"
-          defaultValue="0x5C2a6467d6a1ddaE6C736c5dF0FB5f1F63D0715A"
+          defaultValue={judgeAddress ? judgeAddress : null}
           onChange={e => this.setState({ judgeAddress: e.target.value })}
         />
 
         <FormInput
           label="Description"
-          placeholder="Going to the gym twice a week for 6 months"
+          disabled={disabled}
+          defaultValue={description ? description : null}
           onChange={e => this.setState({ description: e.target.value })}
         />
 
         <FormInput
           fluid
-          action={{
-            color: "teal",
-            labelPosition: "left",
-            icon: "ethereum",
-            content: "Make bet",
-            onClick: () => this.handleCreateBet()
-          }}
+          disabled={disabled}
+          action={
+            disabled
+              ? null
+              : {
+                  color: "teal",
+                  labelPosition: "left",
+                  icon: "ethereum",
+                  content: "Make bet",
+                  onClick: () => this.handleCreateBet()
+                }
+          }
           label="Amount to bet (in ether)"
-          placeholder="0.1"
+          placeholder={amount ? amount : null}
           onChange={e => this.setState({ value: e.target.value })}
         />
       </div>
