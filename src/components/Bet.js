@@ -1,12 +1,22 @@
 import React from "react";
+import { Button, Header } from "semantic-ui-react";
 import { withRouter } from "react-router-dom";
 
 import BetForm from "../components/BetForm";
+
+const STAGE_CREATED = "Created";
+const STAGE_ACCEPTED = "Accepted";
 
 class Bet extends React.Component {
   state = {
     bet: null
   };
+
+  canAcceptBet = (bet, account) =>
+    bet.stage === STAGE_CREATED && bet.acceptor === account;
+
+  canConfirmJudge = (bet, account) =>
+    bet.stage === STAGE_ACCEPTED && bet.judge === account;
 
   async componentDidMount() {
     const {
@@ -36,16 +46,47 @@ class Bet extends React.Component {
       return null;
     }
 
+    const { account } = betchyaContract;
+    const {
+      args: { proposer, acceptor, judge, description, betsIndex }
+    } = log;
+
     return (
-      <BetForm
-        betchyaContract={betchyaContract}
-        disabled
-        proposerAddress={log.args.proposer}
-        acceptorAddress={log.args.acceptor}
-        judgeAddress={log.args.judge}
-        description={log.args.description}
-        amount={betchyaContract.web3.fromWei(bet.amount, "ether")}
-      />
+      <div>
+        <Header
+          as="h2"
+          style={{
+            color: "rgba(0, 0, 0, 0.6)"
+          }}
+        >
+          Stage: {bet.stage}
+        </Header>
+        <BetForm
+          betchyaContract={betchyaContract}
+          disabled
+          proposerAddress={proposer}
+          acceptorAddress={acceptor}
+          judgeAddress={judge}
+          description={description}
+          amount={betchyaContract.web3.fromWei(bet.amount, "ether")}
+        />
+        {this.canAcceptBet(bet, account) && (
+          <Button
+            primary
+            onClick={() => betchyaContract.acceptBet(betsIndex, bet.amount)}
+          >
+            Accept bet
+          </Button>
+        )}
+        {this.canConfirmJudge(bet, account) && (
+          <Button
+            primary
+            onClick={() => betchyaContract.confirmJudge(betsIndex)}
+          >
+            Confirm judge
+          </Button>
+        )}
+      </div>
     );
   }
 }

@@ -14,6 +14,17 @@ export default class BetchyaContract {
       value: (this.web3.utils || this.web3).toWei(value, "ether")
     });
 
+  acceptBet = (betsIndex, value) =>
+    this.contract.acceptBet(betsIndex, {
+      from: this.account,
+      value
+    });
+
+  confirmJudge = betsIndex =>
+    this.contract.confirmJudge(betsIndex, {
+      from: this.account
+    });
+
   getBet = bet => this.contract.bets.call(bet).then(toBetObject);
 
   getLogsForBet = bet => {
