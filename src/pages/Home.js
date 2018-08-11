@@ -1,7 +1,9 @@
 import React from "react";
+import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import styled from "styled-components";
 import { Header, Message } from "semantic-ui-react";
 
+import Bet from "../components/Bet";
 import BetForm from "../components/BetForm";
 import BetSelector from "../components/BetSelector";
 
@@ -32,21 +34,40 @@ const MenuRow = styled.div`
 `;
 
 const Home = ({ message, participations, betchyaContract, onDismiss }) => (
-  <AppWrapper>
-    {message && (
-      <Message positive header="Success" onDismiss={onDismiss}>
-        {message}
-      </Message>
-    )}
+  <Router>
+    <AppWrapper>
+      {message && (
+        <Message positive header="Success" onDismiss={onDismiss}>
+          {message}
+        </Message>
+      )}
 
-    <ContentWrapper>
-      <AppHeader size="huge">Betchya.eth - challenge your friends!</AppHeader>
-      <MenuRow>
-        <BetSelector participations={participations} />
-      </MenuRow>
-      <BetForm betchyaContract={betchyaContract} />
-    </ContentWrapper>
-  </AppWrapper>
+      <ContentWrapper>
+        <AppHeader size="huge">Betchya.eth - challenge your friends!</AppHeader>
+        <MenuRow>
+          <BetSelector participations={participations} />
+        </MenuRow>
+        <Switch>
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "620px"
+            }}
+          >
+            <Route
+              path="/:id"
+              component={() => <Bet betchyaContract={betchyaContract} />}
+            />
+            <Route
+              exact
+              path="/"
+              component={() => <BetForm betchyaContract={betchyaContract} />}
+            />
+          </div>
+        </Switch>
+      </ContentWrapper>
+    </AppWrapper>
+  </Router>
 );
 
 export default Home;

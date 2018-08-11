@@ -1,10 +1,11 @@
-import { toBetObject, toBetParticipation } from "./contractUtils";
+import { toBetObject } from "./contractUtils";
 
 export default class BetchyaContract {
   constructor(web3, contract, account) {
     this.web3 = web3;
     this.contract = contract;
     this.account = account;
+    window.contract = contract;
   }
 
   createBet = async (acceptor, judge, value, description) =>
@@ -13,24 +14,28 @@ export default class BetchyaContract {
       value: (this.web3.utils || this.web3).toWei(value, "ether")
     });
 
-  getAccountBetParticipations = async address => {
-    const numBets = await this.contract.getUserBetParticipationsLength
-      .call(address)
-      .then(n => parseInt(n, 10));
+  getBet = bet => this.contract.bets.call(bet).then(toBetObject);
 
-    const bets = [];
-    for (let i = 0; i < numBets; i++) {
-      const betParticipation = await this.contract.addressToBetParticipation
-        .call(address, i)
-        .then(toBetParticipation);
+  getLogsForBet = bet => {
+    const { proposer, acceptor, judge } = bet;
+    const log = this.contract.BetCreated(
+      {
+        proposer,
+        acceptor,
+        judge
+      },
+      { fromBlock: 0 }
+    );
 
-      const bet = await this.contract.bets
-        .call(betParticipation.betIndex)
-        .then(toBetObject);
+    return new Promise((resolve, reject) => {
+      log.get((err, eventLog) => {
+        if (err) {
+          reject(err);
+          return;
+        }
 
-      bets.push({ ...bet, ...betParticipation });
-    }
-
-    return bets;
+        resolve(eventLog);
+      });
+    });
   };
 }
