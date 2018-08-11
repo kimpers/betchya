@@ -77,6 +77,7 @@ class BetForm extends Component {
         <FormInput
           label="Description"
           disabled={disabled}
+          placeholder="Go to the gym twice a week for 6 months"
           defaultValue={description ? description : null}
           onChange={e => this.setState({ description: e.target.value })}
         />
@@ -96,7 +97,8 @@ class BetForm extends Component {
                 }
           }
           label="Amount to bet (in ether)"
-          placeholder={amount ? amount : null}
+          placeholder="0.1"
+          defaultValue={amount ? amount : null}
           onChange={e => this.setState({ value: e.target.value })}
         />
       </div>
