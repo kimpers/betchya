@@ -7,12 +7,11 @@ const FormInput = styled(Input)`
 `;
 
 class BetForm extends Component {
-  // TODO: remove default values
   state = {
-    acceptorAddress: "0x3dc9310B010bAEC67cBFb9816DB86435DE057Bac",
-    judgeAddress: "0x5C2a6467d6a1ddaE6C736c5dF0FB5f1F63D0715A",
+    acceptorAddress: null,
+    judgeAddress: null,
     description: null,
-    value: 0.1
+    value: null
   };
 
   handleCreateBet = () => {
@@ -32,14 +31,7 @@ class BetForm extends Component {
   };
 
   render() {
-    const {
-      disabled,
-      proposerAddress,
-      acceptorAddress,
-      judgeAddress,
-      description,
-      amount
-    } = this.props;
+    const { disabled, proposerAddress } = this.props;
 
     return (
       <div
@@ -54,7 +46,7 @@ class BetForm extends Component {
             fluid
             disabled={disabled}
             placeholder="0x123456"
-            defaultValue={proposerAddress ? proposerAddress : null}
+            value={disabled ? proposerAddress : null}
           />
         )}
         <FormInput
@@ -62,7 +54,9 @@ class BetForm extends Component {
           fluid
           disabled={disabled}
           placeholder="0x123456"
-          defaultValue={acceptorAddress ? acceptorAddress : null}
+          value={
+            disabled ? this.props.acceptorAddress : this.state.acceptorAddress
+          }
           onChange={e => this.setState({ acceptorAddress: e.target.value })}
         />
         <FormInput
@@ -70,7 +64,7 @@ class BetForm extends Component {
           fluid
           disabled={disabled}
           placeholder="0x123456"
-          defaultValue={judgeAddress ? judgeAddress : null}
+          value={disabled ? this.props.judgeAddress : this.state.judgeAddress}
           onChange={e => this.setState({ judgeAddress: e.target.value })}
         />
 
@@ -78,7 +72,7 @@ class BetForm extends Component {
           label="Description"
           disabled={disabled}
           placeholder="Go to the gym twice a week for 6 months"
-          defaultValue={description ? description : null}
+          value={disabled ? this.props.description : this.state.description}
           onChange={e => this.setState({ description: e.target.value })}
         />
 
@@ -98,7 +92,7 @@ class BetForm extends Component {
           }
           label="Amount to bet (in ether)"
           placeholder="0.1"
-          defaultValue={amount ? amount : null}
+          value={disabled ? this.props.amount : this.state.value}
           onChange={e => this.setState({ value: e.target.value })}
         />
       </div>

@@ -18,7 +18,7 @@ class Bet extends React.Component {
   canConfirmJudge = (bet, account) =>
     bet.stage === STAGE_ACCEPTED && bet.judge === account;
 
-  async componentDidMount() {
+  getBetInfo = async () => {
     const {
       betchyaContract,
       match: {
@@ -37,6 +37,17 @@ class Bet extends React.Component {
       bet,
       log: logs[0]
     });
+  };
+
+  componentDidMount() {
+    this.getBetInfo();
+  }
+
+  componentDidUpdate(prevProps) {
+    // Get new bet info whenever the bet id changes
+    if (this.props.match.params.id !== prevProps.match.params.id) {
+      this.getBetInfo();
+    }
   }
 
   render() {
