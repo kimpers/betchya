@@ -1,4 +1,10 @@
-export const stages = ["Created", "Accepted", "InProgress", "Settled"];
+export const stages = [
+  "Created",
+  "Accepted",
+  "InProgress",
+  "Settled",
+  "Cancelled"
+];
 export const toStage = num => stages[num];
 export const results = ["NotSettled", "ProposerWon", "AcceptorWon", "Draw"];
 export const toResult = num => results[num];

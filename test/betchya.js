@@ -266,4 +266,132 @@ contract("Betchya", accounts => {
       assert.equal(bet.result, "NotSettled");
     });
   });
+
+  describe("cancelBet", () => {
+    it("should cancel a bet if called by proposer in created stage", async () => {
+      await betchya.createBet(acceptor, judge, "Challenged!", {
+        from: proposer,
+        value: 1
+      });
+
+      const betCancelledWatcher = betchya.BetCancelled();
+      await betchya.cancelBet(betIndex, {
+        from: proposer
+      });
+
+      const events = await betCancelledWatcher.get();
+
+      assert.equal(events.length, 1, "1 BetCancelled event");
+      assert.equal(events[0].args.betsIndex, betIndex, "betsIndex is correct");
+
+      const bet = await betchya.bets.call(betIndex).then(toBetObject);
+      assert.equal(bet.stage, "Cancelled");
+    });
+
+    it("should cancel a bet if called by acceptor in created stage", async () => {
+      await betchya.createBet(acceptor, judge, "Challenged!", {
+        from: proposer,
+        value: 1
+      });
+
+      const betCancelledWatcher = betchya.BetCancelled();
+
+      await betchya.cancelBet(betIndex, {
+        from: acceptor
+      });
+
+      const events = await betCancelledWatcher.get();
+
+      assert.equal(events.length, 1, "1 BetCancelled event");
+      assert.equal(events[0].args.betsIndex, betIndex, "betsIndex is correct");
+
+      const bet = await betchya.bets.call(betIndex).then(toBetObject);
+      assert.equal(bet.stage, "Cancelled");
+    });
+
+    it("should cancel a bet if called by proposer in accepted stage", async () => {
+      await betchya.createBet(acceptor, judge, "Challenged!", {
+        from: proposer,
+        value: 1
+      });
+
+      await betchya.acceptBet(betIndex, { from: acceptor, value: 1 });
+
+      const betCancelledWatcher = betchya.BetCancelled();
+
+      await betchya.cancelBet(betIndex, {
+        from: proposer
+      });
+
+      const events = await betCancelledWatcher.get();
+
+      assert.equal(events.length, 1, "1 BetCancelled event");
+      assert.equal(events[0].args.betsIndex, betIndex, "betsIndex is correct");
+
+      const bet = await betchya.bets.call(betIndex).then(toBetObject);
+      assert.equal(bet.stage, "Cancelled");
+    });
+
+    it("should cancel a bet if called by acceptor in accepted stage", async () => {
+      await betchya.createBet(acceptor, judge, "Challenged!", {
+        from: proposer,
+        value: 1
+      });
+
+      await betchya.acceptBet(betIndex, { from: acceptor, value: 1 });
+
+      const betCancelledWatcher = betchya.BetCancelled();
+
+      await betchya.cancelBet(betIndex, {
+        from: acceptor
+      });
+
+      const events = await betCancelledWatcher.get();
+
+      assert.equal(events.length, 1, "1 BetCancelled event");
+      assert.equal(events[0].args.betsIndex, betIndex, "betsIndex is correct");
+
+      const bet = await betchya.bets.call(betIndex).then(toBetObject);
+      assert.equal(bet.stage, "Cancelled");
+    });
+
+    it("should fail to cancel a bet if called by anyone else", async () => {
+      await betchya.createBet(acceptor, judge, "Challenged!", {
+        from: proposer,
+        value: 1
+      });
+
+      await betchya.acceptBet(betIndex, { from: acceptor, value: 1 });
+
+      assertFailed(() =>
+        betchya.cancelBet(betIndex, {
+          from: otherAccount
+        })
+      );
+
+      const bet = await betchya.bets.call(betIndex).then(toBetObject);
+      assert.equal(bet.stage, "Accepted");
+    });
+    it("should fail to cancel a bet if in progress stage", async () => {
+      await betchya.createBet(acceptor, judge, "Challenged!", {
+        from: proposer,
+        value: 1
+      });
+
+      await betchya.acceptBet(betIndex, { from: acceptor, value: 1 });
+
+      await betchya.confirmJudge(betIndex, { from: judge });
+
+      const betCancelledWatcher = betchya.BetCancelled();
+
+      assertFailed(() =>
+        betchya.cancelBet(betIndex, {
+          from: proposer
+        })
+      );
+
+      const bet = await betchya.bets.call(betIndex).then(toBetObject);
+      assert.equal(bet.stage, "InProgress");
+    });
+  });
 });

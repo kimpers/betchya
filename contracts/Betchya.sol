@@ -4,7 +4,7 @@ import "zeppelin/ownership/Ownable.sol";
 
 /** @title Betchya */
 contract Betchya is Ownable {
-  enum BetStages { Created, Accepted, InProgress, Settled  }
+  enum BetStages { Created, Accepted, InProgress, Settled, Cancelled }
   enum BetResults { NotSettled, ProposerWon, AcceptorWon, Draw }
 
   struct Bet {
@@ -61,7 +61,7 @@ contract Betchya is Ownable {
     _;
   }
 
-  /*
+  /**
   * @dev Event confirming the creation of a bet challenge
   * @param proposer Address of the bet proposing user
   * @param acceptor Address of the user being challenged in the bet
@@ -77,7 +77,7 @@ contract Betchya is Ownable {
   );
 
 
-  /*
+  /**
   * @dev Event confirming that the bet has been accepted by the acceptor and matching amount has been transferred
   * @param betsIndex Current bet's element index in the bets array
   */
@@ -85,7 +85,7 @@ contract Betchya is Ownable {
     uint256 indexed betsIndex
   );
 
-  /*
+  /**
   * @dev Event confirming that the juge has confirmed to jugde the bet
   * @param betsIndex Current bet's element index in the bets array
   */
@@ -93,11 +93,19 @@ contract Betchya is Ownable {
     uint256 indexed betsIndex
   );
 
-  /*
+  /**
   * @dev Event confirming that the juge has settled the result of the bet
   * @param betsIndex Current bet's element index in the bets array
   */
   event BetSettled(
+    uint256 indexed betsIndex
+  );
+
+  /**
+  * @dev Event confirming that a specfic bet has been cancelled (before starting)
+  * @param betsIndex Current bet's element index in the bets array
+  */
+  event BetCancelled(
     uint256 indexed betsIndex
   );
 
@@ -184,4 +192,24 @@ contract Betchya is Ownable {
 
     emit BetSettled(betsIndex);
   }
+
+  /**
+  * @dev Cancels a bet that has not yet started when called by either proposer or acceptor
+  * @param betsIndex Current bet's element index in the bets array
+  */
+  function cancelBet(uint betsIndex)
+    public
+  {
+    Bet storage bet = bets[betsIndex];
+
+    // Only allow bet to be cancelled before it's in progress
+    require(bet.stage == BetStages.Created || bet.stage == BetStages.Accepted);
+    // Bets can be cancelled by either proposer or acceptor
+    require(msg.sender == bet.proposer || msg.sender == bet.acceptor);
+
+    bet.stage = BetStages.Cancelled;
+
+    emit BetCancelled(betsIndex);
+  }
+
 }
