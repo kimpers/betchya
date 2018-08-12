@@ -14,6 +14,8 @@ contract Betchya is Ownable {
     uint256 amount;
     BetStages stage;
     BetResults result;
+    bool proposerWithdrawn;
+    bool acceptorWithdrawn;
   }
 
   /**
@@ -129,7 +131,7 @@ contract Betchya is Ownable {
     // Don't allow empty descriptions
     require(bytes(description).length != 0);
 
-    Bet memory bet = Bet(msg.sender, acceptor, judge, msg.value, BetStages.Created, BetResults.NotSettled);
+    Bet memory bet = Bet(msg.sender, acceptor, judge, msg.value, BetStages.Created, BetResults.NotSettled, false, false);
 
 
 
@@ -212,4 +214,51 @@ contract Betchya is Ownable {
     emit BetCancelled(betsIndex);
   }
 
+  function withdraw(uint betsIndex)
+    public
+  {
+    Bet storage bet = bets[betsIndex];
+
+    // TODO: how to handle cancelled bets
+    require(bet.stage == BetStages.Settled);
+
+    if (bet.result == BetResults.ProposerWon) {
+      require(msg.sender == bet.proposer);
+      // Only allow one withdrawal
+      require(bet.proposerWithdrawn == false);
+
+      bet.proposerWithdrawn = true;
+
+      // Winner gets ether from both proposer and acceptor
+      bet.proposer.transfer(bet.amount * 2);
+    } else if (bet.result == BetResults.AcceptorWon) {
+      require (msg.sender == bet.acceptor);
+      // Only allow one withdrawal
+      require(bet.acceptorWithdrawn == false);
+
+      bet.acceptorWithdrawn = true;
+
+      // Winner gets ether from both proposer and acceptor
+      bet.acceptor.transfer(bet.amount * 2);
+    } else if (bet.result == BetResults.Draw) {
+      require(msg.sender == bet.proposer || msg.sender == bet.acceptor);
+      if (msg.sender == bet.proposer) {
+        require(bet.proposerWithdrawn == false);
+
+        bet.proposerWithdrawn = true;
+
+        // On draw allow withdrawal of initial bet for each party
+        bet.proposer.transfer(bet.amount);
+      } else if (msg.sender == bet.acceptor) {
+        require(bet.acceptorWithdrawn == false);
+
+        bet.acceptorWithdrawn = true;
+        // On draw allow withdrawal of initial bet for each party
+        bet.acceptor.transfer(bet.amount);
+      } else {
+        // Only proposer & acceptor should be able to withdraw
+        revert();
+      }
+    }
+  }
 }

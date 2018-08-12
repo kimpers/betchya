@@ -17,12 +17,16 @@ export const toBetObject = ([
   judge,
   amount,
   stage,
-  result
+  result,
+  proposerWithdrawn,
+  acceptorWithdrawn
 ]) => ({
   proposer,
   acceptor,
   judge,
   amount: amount.toString(),
   stage: toStage(stage),
-  result: toResult(result)
+  result: toResult(result),
+  proposerWithdrawn,
+  acceptorWithdrawn
 });
