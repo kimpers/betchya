@@ -1,4 +1,4 @@
-/* global assert, artifacts, contract */
+/* global assert, artifacts, contract, web3 */
 const Betchya = artifacts.require("./Betchya.sol");
 
 import { resultNameToValue, toBetObject } from "../src/lib/contractUtils";
@@ -227,7 +227,7 @@ contract("Betchya", accounts => {
       await betchya.confirmJudge(betIndex, { from: judge });
 
       const betResult = "ProposerWon";
-      assertFailed(() =>
+      await assertFailed(() =>
         betchya.settleBet(betIndex, resultNameToValue(betResult), {
           from: otherAccount
         })
@@ -254,7 +254,7 @@ contract("Betchya", accounts => {
       await betchya.confirmJudge(betIndex, { from: judge });
 
       const betResult = "NotSettled";
-      assertFailed(() =>
+      await assertFailed(() =>
         betchya.settleBet(betIndex, resultNameToValue(betResult), {
           from: judge
         })
@@ -363,7 +363,7 @@ contract("Betchya", accounts => {
 
       await betchya.acceptBet(betIndex, { from: acceptor, value: 1 });
 
-      assertFailed(() =>
+      await assertFailed(() =>
         betchya.cancelBet(betIndex, {
           from: otherAccount
         })
@@ -384,7 +384,7 @@ contract("Betchya", accounts => {
 
       const betCancelledWatcher = betchya.BetCancelled();
 
-      assertFailed(() =>
+      await assertFailed(() =>
         betchya.cancelBet(betIndex, {
           from: proposer
         })
@@ -392,6 +392,229 @@ contract("Betchya", accounts => {
 
       const bet = await betchya.bets.call(betIndex).then(toBetObject);
       assert.equal(bet.stage, "InProgress");
+    });
+  });
+
+  describe("withdraw", () => {
+    const createConfirmedBet = async () => {
+      await betchya.createBet(acceptor, judge, "Challenged!", {
+        from: proposer,
+        value: web3.toWei(1, "ether")
+      });
+
+      await betchya.acceptBet(betIndex, {
+        from: acceptor,
+        value: web3.toWei(1, "ether")
+      });
+
+      await betchya.confirmJudge(betIndex, { from: judge });
+    };
+
+    describe("proposer won", () => {
+      it("should allow proposer to withdraw the the entire amount", async () => {
+        await createConfirmedBet();
+
+        const betResult = "ProposerWon";
+        await betchya.settleBet(betIndex, resultNameToValue(betResult), {
+          from: judge
+        });
+
+        const balance = web3
+          .fromWei(web3.eth.getBalance(proposer), "ether")
+          .toNumber();
+        await betchya.withdraw(betIndex, { from: proposer });
+        const newBalance = web3
+          .fromWei(web3.eth.getBalance(proposer), "ether")
+          .toNumber();
+
+        // Round to results to full ether to ignore transaction costs
+        assert.equal(
+          Math.round(balance) + 2,
+          Math.round(newBalance),
+          "Winner receives funds after withdrawing"
+        );
+      });
+
+      it("should not allow proposer to withdraw multiple times", async () => {
+        await createConfirmedBet();
+
+        const betResult = "ProposerWon";
+        await betchya.settleBet(betIndex, resultNameToValue(betResult), {
+          from: judge
+        });
+
+        await betchya.withdraw(betIndex, { from: proposer });
+        await assertFailed(() =>
+          betchya.withdraw(betIndex, { from: proposer })
+        );
+      });
+
+      it("should not allow acceptor to withdraw", async () => {
+        await createConfirmedBet();
+
+        const betResult = "ProposerWon";
+        await betchya.settleBet(betIndex, resultNameToValue(betResult), {
+          from: judge
+        });
+
+        await assertFailed(() =>
+          betchya.withdraw(betIndex, { from: acceptor })
+        );
+      });
+    });
+
+    describe("acceptor won", () => {
+      it("should allow acceptor to withdraw the the entire amount", async () => {
+        await createConfirmedBet();
+
+        const betResult = "AcceptorWon";
+        await betchya.settleBet(betIndex, resultNameToValue(betResult), {
+          from: judge
+        });
+
+        const balance = web3
+          .fromWei(web3.eth.getBalance(acceptor), "ether")
+          .toNumber();
+        await betchya.withdraw(betIndex, { from: acceptor });
+        const newBalance = web3
+          .fromWei(web3.eth.getBalance(acceptor), "ether")
+          .toNumber();
+
+        // Round to results to full ether to ignore transaction costs
+        assert.equal(
+          Math.round(balance) + 2,
+          Math.round(newBalance),
+          "Winner receives funds after withdrawing"
+        );
+      });
+
+      it("should not allow proposer to withdraw multiple times", async () => {
+        await createConfirmedBet();
+
+        const betResult = "AcceptorWon";
+        await betchya.settleBet(betIndex, resultNameToValue(betResult), {
+          from: judge
+        });
+
+        await betchya.withdraw(betIndex, { from: acceptor });
+        await assertFailed(() =>
+          betchya.withdraw(betIndex, { from: acceptor })
+        );
+      });
+
+      it("should not allow proposer to withdraw", async () => {
+        await createConfirmedBet();
+
+        const betResult = "AcceptorWon";
+        await betchya.settleBet(betIndex, resultNameToValue(betResult), {
+          from: judge
+        });
+
+        await assertFailed(() =>
+          betchya.withdraw(betIndex, { from: proposer })
+        );
+      });
+    });
+
+    describe("draw", () => {
+      it("should allow both proposer and acceptor to withdraw their initial deposit", async () => {
+        await createConfirmedBet();
+
+        const betResult = "Draw";
+        await betchya.settleBet(betIndex, resultNameToValue(betResult), {
+          from: judge
+        });
+
+        const balanceProposer = web3
+          .fromWei(web3.eth.getBalance(proposer), "ether")
+          .toNumber();
+        await betchya.withdraw(betIndex, { from: proposer });
+        const newBalanceProposer = web3
+          .fromWei(web3.eth.getBalance(proposer), "ether")
+          .toNumber();
+
+        // Round to results to full ether to ignore transaction costs
+        assert.equal(
+          Math.round(balanceProposer) + 1,
+          Math.round(newBalanceProposer),
+          "Proposer receives initial deposit funds after withdrawing on draw"
+        );
+
+        const balanceAcceptor = web3
+          .fromWei(web3.eth.getBalance(acceptor), "ether")
+          .toNumber();
+        await betchya.withdraw(betIndex, { from: acceptor });
+        const newBalanceAcceptor = web3
+          .fromWei(web3.eth.getBalance(acceptor), "ether")
+          .toNumber();
+
+        // Round to results to full ether to ignore transaction costs
+        assert.equal(
+          Math.round(balanceAcceptor) + 1,
+          Math.round(newBalanceAcceptor),
+          "Acceptor receives initial deposit funds after withdrawing on draw"
+        );
+      });
+
+      it("should not allow acceptor or proposer to withdraw twice", async () => {
+        await createConfirmedBet();
+
+        const betResult = "Draw";
+        await betchya.settleBet(betIndex, resultNameToValue(betResult), {
+          from: judge
+        });
+
+        const balanceProposer = web3
+          .fromWei(web3.eth.getBalance(proposer), "ether")
+          .toNumber();
+        await betchya.withdraw(betIndex, { from: proposer });
+        const newBalanceProposer = web3
+          .fromWei(web3.eth.getBalance(proposer), "ether")
+          .toNumber();
+
+        await assertFailed(() =>
+          betchya.withdraw(betIndex, { from: proposer })
+        );
+
+        // Round to results to full ether to ignore transaction costs
+        assert.equal(
+          Math.round(balanceProposer) + 1,
+          Math.round(newBalanceProposer),
+          "Proposer receives initial deposit funds after withdrawing on draw"
+        );
+
+        const balanceAcceptor = web3
+          .fromWei(web3.eth.getBalance(acceptor), "ether")
+          .toNumber();
+        await betchya.withdraw(betIndex, { from: acceptor });
+        const newBalanceAcceptor = web3
+          .fromWei(web3.eth.getBalance(acceptor), "ether")
+          .toNumber();
+
+        await assertFailed(() =>
+          betchya.withdraw(betIndex, { from: acceptor })
+        );
+
+        // Round to results to full ether to ignore transaction costs
+        assert.equal(
+          Math.round(balanceAcceptor) + 1,
+          Math.round(newBalanceAcceptor),
+          "Acceptor receives initial deposit funds after withdrawing on draw"
+        );
+      });
+
+      it("should not let other accounts withdraw", async () => {
+        await createConfirmedBet();
+
+        const betResult = "Draw";
+        await betchya.settleBet(betIndex, resultNameToValue(betResult), {
+          from: judge
+        });
+
+        await assertFailed(() =>
+          betchya.withdraw(betIndex, { from: otherAccount })
+        );
+      });
     });
   });
 });
