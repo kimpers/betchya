@@ -219,8 +219,7 @@ contract Betchya is Ownable {
   {
     Bet storage bet = bets[betsIndex];
 
-    // TODO: how to handle cancelled bets
-    require(bet.stage == BetStages.Settled);
+    require(bet.stage == BetStages.Settled || bet.stage == BetStages.Cancelled);
 
     if (bet.result == BetResults.ProposerWon) {
       require(msg.sender == bet.proposer);
@@ -240,8 +239,9 @@ contract Betchya is Ownable {
 
       // Winner gets ether from both proposer and acceptor
       bet.acceptor.transfer(bet.amount * 2);
-    } else if (bet.result == BetResults.Draw) {
-      require(msg.sender == bet.proposer || msg.sender == bet.acceptor);
+
+      /// Allow both parties to withdraw their deposit in case of draw or cancellation
+    } else if (bet.result == BetResults.Draw || bet.stage == BetStages.Cancelled) {
       if (msg.sender == bet.proposer) {
         require(bet.proposerWithdrawn == false);
 
