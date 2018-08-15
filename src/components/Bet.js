@@ -2,12 +2,17 @@ import React from "react";
 import { Button, Header } from "semantic-ui-react";
 import { withRouter } from "react-router-dom";
 
-import BetForm from "../components/BetForm";
-
-const STAGE_CREATED = "Created";
-const STAGE_ACCEPTED = "Accepted";
-const STAGE_CANCELLED = "Cancelled";
-const STAGE_SETTLED = "Settled";
+import {
+  STAGE_CREATED,
+  STAGE_ACCEPTED,
+  STAGE_CANCELLED,
+  STAGE_SETTLED,
+  STAGE_IN_PROGRESS,
+  RESULT_PROPOSER_WON,
+  RESULT_ACCEPTOR_WON
+} from "../lib/contractUtils";
+import BetForm from "./BetForm";
+import SettleDropdown from "./SettleDropdown.js";
 
 const canAcceptBet = (bet, account) =>
   bet.stage === STAGE_CREATED && bet.acceptor === account;
@@ -19,10 +24,25 @@ const canCancelBet = (bet, account) =>
   (bet.stage === STAGE_CREATED || bet.stage === STAGE_ACCEPTED) &&
   (account === bet.proposer || account === bet.acceptor);
 
-const canWithdraw = (bet, account) =>
+const canWithdrawCancelled = (bet, account) =>
   bet.stage === STAGE_CANCELLED &&
   ((bet.proposer === account && !bet.proposerWithdrawn) ||
     (bet.acceptor === account && !bet.acceptorWithdrawn));
+
+const canWithdrawWon = (bet, account) =>
+  bet.stage === STAGE_SETTLED &&
+  ((bet.proposer === account &&
+    bet.result === RESULT_PROPOSER_WON &&
+    !bet.proposerWithdrawn) ||
+    (bet.acceptor === account &&
+      bet.result === RESULT_ACCEPTOR_WON &&
+      !bet.acceptorWithdrawn));
+
+const canWithdraw = (bet, account) =>
+  canWithdrawCancelled(bet, account) || canWithdrawWon(bet, account);
+
+const canJudge = (bet, account) =>
+  bet.stage === STAGE_IN_PROGRESS && bet.judge === account;
 
 class Bet extends React.Component {
   state = {
@@ -120,6 +140,9 @@ class Bet extends React.Component {
           <Button primary onClick={() => betchyaContract.withdraw(betsIndex)}>
             Withdraw ether
           </Button>
+        )}
+        {canJudge(bet, account) && (
+          <SettleDropdown bet={bet} betchyaContract={betchyaContract} />
         )}
       </div>
     );
