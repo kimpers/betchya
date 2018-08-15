@@ -1,4 +1,5 @@
 import React from "react";
+import R from "ramda";
 import { withRouter } from "react-router-dom";
 import { Dropdown } from "semantic-ui-react";
 
@@ -14,7 +15,8 @@ const BetSelector = ({ participations, history }) => {
       value: "",
       key: "participation-home"
     },
-    ...participations.map((participation, i) => ({
+    // Need to filter ut duplicates if user has multiple roles in a single bet
+    ...R.uniqBy(p => p.betsIndex, participations).map((participation, i) => ({
       text: `${participation.description} (${participation.role}) `,
       value: participation.betsIndex.toString(),
       key: `participation-${i}`
