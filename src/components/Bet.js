@@ -6,17 +6,28 @@ import BetForm from "../components/BetForm";
 
 const STAGE_CREATED = "Created";
 const STAGE_ACCEPTED = "Accepted";
+const STAGE_CANCELLED = "Cancelled";
+const STAGE_SETTLED = "Settled";
+
+const canAcceptBet = (bet, account) =>
+  bet.stage === STAGE_CREATED && bet.acceptor === account;
+
+const canConfirmJudge = (bet, account) =>
+  bet.stage === STAGE_ACCEPTED && bet.judge === account;
+
+const canCancelBet = (bet, account) =>
+  (bet.stage === STAGE_CREATED || bet.stage === STAGE_ACCEPTED) &&
+  (account === bet.proposer || account === bet.acceptor);
+
+const canWithdraw = (bet, account) =>
+  bet.stage === STAGE_CANCELLED &&
+  ((bet.proposer === account && !bet.proposerWithdrawn) ||
+    (bet.acceptor === account && !bet.acceptorWithdrawn));
 
 class Bet extends React.Component {
   state = {
     bet: null
   };
-
-  canAcceptBet = (bet, account) =>
-    bet.stage === STAGE_CREATED && bet.acceptor === account;
-
-  canConfirmJudge = (bet, account) =>
-    bet.stage === STAGE_ACCEPTED && bet.judge === account;
 
   getBetInfo = async () => {
     const {
@@ -81,7 +92,7 @@ class Bet extends React.Component {
           description={description}
           amount={betchyaContract.web3.fromWei(bet.amount, "ether")}
         />
-        {this.canAcceptBet(bet, account) && (
+        {canAcceptBet(bet, account) && (
           <Button
             primary
             onClick={() => betchyaContract.acceptBet(betsIndex, bet.amount)}
@@ -89,12 +100,25 @@ class Bet extends React.Component {
             Accept bet
           </Button>
         )}
-        {this.canConfirmJudge(bet, account) && (
+        {canConfirmJudge(bet, account) && (
           <Button
             primary
             onClick={() => betchyaContract.confirmJudge(betsIndex)}
           >
             Confirm judge
+          </Button>
+        )}
+        {canCancelBet(bet, account) && (
+          <Button
+            secondary
+            onClick={() => betchyaContract.cancelBet(betsIndex)}
+          >
+            Cancel bet
+          </Button>
+        )}
+        {canWithdraw(bet, account) && (
+          <Button primary onClick={() => betchyaContract.withdraw(betsIndex)}>
+            Withdraw ether
           </Button>
         )}
       </div>
