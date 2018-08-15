@@ -25,6 +25,12 @@ export default class BetchyaContract {
       from: this.account
     });
 
+  cancelBet = betsIndex =>
+    this.contract.cancelBet(betsIndex, { from: this.account });
+
+  withdraw = betsIndex =>
+    this.contract.withdraw(betsIndex, { from: this.account });
+
   getBet = bet => this.contract.bets.call(bet).then(toBetObject);
 
   getLogsForBet = bet => {
