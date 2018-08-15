@@ -31,7 +31,14 @@ export default class BetchyaContract {
   withdraw = betsIndex =>
     this.contract.withdraw(betsIndex, { from: this.account });
 
-  getBet = bet => this.contract.bets.call(bet).then(toBetObject);
+  settleBet = (betsIndex, result) =>
+    this.contract.settleBet(betsIndex, result, { from: this.account });
+
+  getBet = betsIndex =>
+    this.contract.bets.call(betsIndex).then(b => ({
+      ...toBetObject(b),
+      betsIndex
+    }));
 
   getLogsForBet = bet => {
     const { proposer, acceptor, judge } = bet;
