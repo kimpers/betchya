@@ -21,6 +21,11 @@ export const results = [
   RESULT_ACCEPTOR_WON,
   RESULT_DRAW
 ];
+
+export const BREAKER_STATE_STARTED = 0;
+export const BREAKER_STATE_ONLY_WITHDRAWAL = 1;
+export const BREAKER_STATE_STOPPED = 2;
+
 export const toResult = num => results[num];
 export const resultNameToValue = name => results.indexOf(name);
 export const participationTypes = ["Proposer", "Acceptor", "Judge"];

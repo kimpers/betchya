@@ -3,15 +3,7 @@ const Betchya = artifacts.require("./Betchya.sol");
 
 import { resultNameToValue, toBetObject } from "../src/lib/contractUtils";
 
-const assertFailed = async promiseFn => {
-  try {
-    await promiseFn();
-  } catch (e) {
-    return;
-  }
-
-  assert(false, "Did not fail as expected");
-};
+import { assertFailed } from "./util";
 
 contract("Betchya", accounts => {
   // New contract for every test to avoid lingering state
