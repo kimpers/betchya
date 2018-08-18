@@ -1,9 +1,9 @@
 pragma solidity ^0.4.24;
 
-import "zeppelin/ownership/Ownable.sol";
+import "./CircuitBreaker.sol";
 
 /** @title Betchya */
-contract Betchya is Ownable {
+contract Betchya is CircuitBreaker {
   enum BetStages { Created, Accepted, InProgress, Settled, Cancelled }
   enum BetResults { NotSettled, ProposerWon, AcceptorWon, Draw }
 
@@ -16,6 +16,7 @@ contract Betchya is Ownable {
     BetResults result;
     bool proposerWithdrawn;
     bool acceptorWithdrawn;
+    bool acceptorDeposited;
   }
 
   /**
@@ -120,6 +121,7 @@ contract Betchya is Ownable {
   */
   function createBet(address acceptor, address judge, string description)
     public
+    contractStarted
     payable
   {
     // Require bet of some ETH
@@ -131,7 +133,17 @@ contract Betchya is Ownable {
     // Don't allow empty descriptions
     require(bytes(description).length != 0);
 
-    Bet memory bet = Bet(msg.sender, acceptor, judge, msg.value, BetStages.Created, BetResults.NotSettled, false, false);
+    Bet memory bet = Bet(
+      msg.sender,
+      acceptor,
+      judge,
+      msg.value,
+      BetStages.Created,
+      BetResults.NotSettled,
+      false,
+      false,
+      false
+    );
 
 
 
@@ -145,6 +157,7 @@ contract Betchya is Ownable {
   */
   function acceptBet(uint betsIndex)
     public
+    contractStarted
     onlyInCreatedStage(betsIndex)
     onlyAcceptor(betsIndex)
     payable
@@ -153,6 +166,7 @@ contract Betchya is Ownable {
 
     // Acceptor needs to send same amount as proposer
     require(msg.value == bet.amount);
+    bet.acceptorDeposited = true;
 
     // Transition into "Accepted" stage
     bet.stage = BetStages.Accepted;
@@ -165,6 +179,7 @@ contract Betchya is Ownable {
   */
   function confirmJudge(uint betsIndex)
     public
+    contractStarted
     onlyInAcceptedStage(betsIndex)
     onlyJudge(betsIndex)
   {
@@ -181,6 +196,7 @@ contract Betchya is Ownable {
   */
   function settleBet(uint betsIndex, BetResults result)
     public
+    contractStarted
     onlyInProgressStage(betsIndex)
     onlyJudge(betsIndex)
   {
@@ -201,6 +217,7 @@ contract Betchya is Ownable {
   */
   function cancelBet(uint betsIndex)
     public
+    contractStarted
   {
     Bet storage bet = bets[betsIndex];
 
@@ -216,32 +233,26 @@ contract Betchya is Ownable {
 
   function withdraw(uint betsIndex)
     public
+    contractAllowsWithdrawal
   {
     Bet storage bet = bets[betsIndex];
 
-    require(bet.stage == BetStages.Settled || bet.stage == BetStages.Cancelled);
+    require(bet.stage == BetStages.Settled ||
+            bet.stage == BetStages.Cancelled ||
+            CircuitBreaker.state == CircuitBreaker.BreakerStates.OnlyWithdrawal
+           );
 
-    if (bet.result == BetResults.ProposerWon) {
-      require(msg.sender == bet.proposer);
-      // Only allow one withdrawal
-      require(bet.proposerWithdrawn == false);
+    // Only allow acceptor to withdraw if he/she has deposited
+    if (msg.sender == bet.acceptor) {
+      require(bet.acceptorDeposited == true);
+    }
 
-      bet.proposerWithdrawn = true;
-
-      // Winner gets ether from both proposer and acceptor
-      bet.proposer.transfer(bet.amount * 2);
-    } else if (bet.result == BetResults.AcceptorWon) {
-      require (msg.sender == bet.acceptor);
-      // Only allow one withdrawal
-      require(bet.acceptorWithdrawn == false);
-
-      bet.acceptorWithdrawn = true;
-
-      // Winner gets ether from both proposer and acceptor
-      bet.acceptor.transfer(bet.amount * 2);
-
-      /// Allow both parties to withdraw their deposit in case of draw or cancellation
-    } else if (bet.result == BetResults.Draw || bet.stage == BetStages.Cancelled) {
+    // Allow both parties to withdraw their deposit in case of
+    // draw or cancellation, circuit breaker only withdrawal
+    if (bet.result == BetResults.Draw ||
+        bet.stage == BetStages.Cancelled ||
+        CircuitBreaker.state == CircuitBreaker.BreakerStates.OnlyWithdrawal
+       ) {
       if (msg.sender == bet.proposer) {
         require(bet.proposerWithdrawn == false);
 
@@ -259,6 +270,27 @@ contract Betchya is Ownable {
         // Only proposer & acceptor should be able to withdraw
         revert();
       }
+    } else if (bet.result == BetResults.ProposerWon) {
+      require(msg.sender == bet.proposer);
+      // Only allow one withdrawal
+      require(bet.proposerWithdrawn == false);
+
+      bet.proposerWithdrawn = true;
+
+      // Winner gets ether from both proposer and acceptor
+      bet.proposer.transfer(bet.amount * 2);
+    } else if (bet.result == BetResults.AcceptorWon) {
+      require (msg.sender == bet.acceptor);
+      // Only allow one withdrawal
+      require(bet.acceptorWithdrawn == false);
+
+      bet.acceptorWithdrawn = true;
+
+      // Winner gets ether from both proposer and acceptor
+      bet.acceptor.transfer(bet.amount * 2);
+    } else {
+    // Cannot withdraw, revert
+    revert();
     }
   }
 }
