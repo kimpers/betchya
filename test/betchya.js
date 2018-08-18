@@ -12,7 +12,7 @@ contract("Betchya", accounts => {
     betchya = await Betchya.new();
   });
 
-  const [proposer, acceptor, judge, otherAccount] = accounts;
+  const [owner, proposer, acceptor, judge, otherAccount] = accounts;
   const betIndex = 0; // First bet will get index 0 in the array
 
   const createConfirmedBet = async () => {
@@ -78,6 +78,28 @@ contract("Betchya", accounts => {
         })
       );
     });
+
+    describe("circuit breaker", () => {
+      it("should not allow creating bets when contract is in onlyWithdrawal stage", async () => {
+        await betchya.onlyWithdrawal({ from: owner });
+        await assertFailed(() =>
+          betchya.createBet(acceptor, judge, "Challenged!", {
+            from: proposer,
+            value: 1
+          })
+        );
+      });
+
+      it("should not allow creating bets when contract is in stopped stage", async () => {
+        await betchya.stopContract({ from: owner });
+        await assertFailed(() =>
+          betchya.createBet(acceptor, judge, "Challenged!", {
+            from: proposer,
+            value: 1
+          })
+        );
+      });
+    });
   });
 
   describe("acceptBet", () => {
@@ -138,6 +160,34 @@ contract("Betchya", accounts => {
       assert.equal(bet.stage, "Created");
       assert.equal(bet.result, "NotSettled");
     });
+
+    describe("circuit breaker", () => {
+      it("should not allow accepting bets when contract is in onlyWithdrawal stage", async () => {
+        await betchya.createBet(acceptor, judge, "Challenged!", {
+          from: proposer,
+          value: 1
+        });
+
+        await betchya.onlyWithdrawal({ from: owner });
+
+        await assertFailed(() =>
+          betchya.acceptBet(betIndex, { from: acceptor, value: 1 })
+        );
+      });
+
+      it("should not allow accepting bets when contract is in stopped stage", async () => {
+        await betchya.createBet(acceptor, judge, "Challenged!", {
+          from: proposer,
+          value: 1
+        });
+
+        await betchya.stopContract({ from: owner });
+
+        await assertFailed(() =>
+          betchya.acceptBet(betIndex, { from: acceptor, value: 1 })
+        );
+      });
+    });
   });
 
   describe("confirmJudge", () => {
@@ -185,6 +235,44 @@ contract("Betchya", accounts => {
       const bet = await betchya.bets.call(betIndex).then(toBetObject);
       assert.equal(bet.stage, "Accepted");
       assert.equal(bet.result, "NotSettled");
+    });
+
+    describe("circuit breaker", () => {
+      it("should not allow confirm judge when contract is in onlyWithdrawal stage", async () => {
+        await betchya.createBet(acceptor, judge, "Challenged!", {
+          from: proposer,
+          value: 1
+        });
+
+        await betchya.acceptBet(betIndex, {
+          from: acceptor,
+          value: 1
+        });
+
+        await betchya.onlyWithdrawal({ from: owner });
+
+        await assertFailed(() =>
+          betchya.confirmJudge(betIndex, { from: judge })
+        );
+      });
+
+      it("should not allow confirm judge when contract is in stopped stage", async () => {
+        await betchya.createBet(acceptor, judge, "Challenged!", {
+          from: proposer,
+          value: 1
+        });
+
+        await betchya.acceptBet(betIndex, {
+          from: acceptor,
+          value: 1
+        });
+
+        await betchya.onlyWithdrawal({ from: owner });
+
+        await assertFailed(() =>
+          betchya.confirmJudge(betIndex, { from: judge })
+        );
+      });
     });
   });
 
@@ -270,6 +358,32 @@ contract("Betchya", accounts => {
       const bet = await betchya.bets.call(betIndex).then(toBetObject);
       assert.equal(bet.stage, "InProgress");
       assert.equal(bet.result, "NotSettled");
+    });
+
+    describe("circuit breaker", () => {
+      it("should not allow settling bets when contract is in onlyWithdrawal stage", async () => {
+        await createConfirmedBet();
+        await betchya.onlyWithdrawal({ from: owner });
+
+        const betResult = "ProposerWon";
+        await assertFailed(() =>
+          betchya.settleBet(betIndex, resultNameToValue(betResult), {
+            from: judge
+          })
+        );
+      });
+
+      it("should not allow creating bets when contract is in stopped stage", async () => {
+        await createConfirmedBet();
+        await betchya.stopContract({ from: owner });
+
+        const betResult = "ProposerWon";
+        await assertFailed(() =>
+          betchya.settleBet(betIndex, resultNameToValue(betResult), {
+            from: judge
+          })
+        );
+      });
     });
   });
 
@@ -388,8 +502,6 @@ contract("Betchya", accounts => {
 
       await betchya.confirmJudge(betIndex, { from: judge });
 
-      const betCancelledWatcher = betchya.BetCancelled();
-
       await assertFailed(() =>
         betchya.cancelBet(betIndex, {
           from: proposer
@@ -398,6 +510,30 @@ contract("Betchya", accounts => {
 
       const bet = await betchya.bets.call(betIndex).then(toBetObject);
       assert.equal(bet.stage, "InProgress");
+    });
+
+    describe("circuit breaker", () => {
+      it("should not allow cancelling bets when contract is in onlyWithdrawal stage", async () => {
+        await createConfirmedBet();
+        await betchya.onlyWithdrawal({ from: owner });
+
+        await assertFailed(() =>
+          betchya.cancelBet(betIndex, {
+            from: proposer
+          })
+        );
+      });
+
+      it("should not allow cancelling bets when contract is in stopped stage", async () => {
+        await createConfirmedBet();
+        await betchya.stopContract({ from: owner });
+
+        await assertFailed(() =>
+          betchya.cancelBet(betIndex, {
+            from: proposer
+          })
+        );
+      });
     });
   });
 
@@ -721,6 +857,135 @@ contract("Betchya", accounts => {
 
         await assertFailed(() =>
           betchya.withdraw(betIndex, { from: otherAccount })
+        );
+      });
+
+      it("should not allow acceptor to withdraw if hasn't deposited", async () => {
+        await betchya.createBet(acceptor, judge, "Challenged!", {
+          from: proposer,
+          value: web3.toWei(1, "ether")
+        });
+
+        // Add some extra funds in contract
+        await betchya.createBet(acceptor, judge, "Challenged!", {
+          from: otherAccount,
+          value: web3.toWei(2, "ether")
+        });
+
+        await betchya.cancelBet(betIndex, { from: proposer });
+
+        const balanceProposer = web3
+          .fromWei(web3.eth.getBalance(proposer), "ether")
+          .toNumber();
+        await betchya.withdraw(betIndex, { from: proposer });
+        const newBalanceProposer = web3
+          .fromWei(web3.eth.getBalance(proposer), "ether")
+          .toNumber();
+
+        // Round to results to full ether to ignore transaction costs
+        assert.equal(
+          Math.round(balanceProposer) + 1,
+          Math.round(newBalanceProposer),
+          "Proposer receives initial deposit funds after withdrawing on cancelled"
+        );
+
+        await assertFailed(() =>
+          betchya.withdraw(betIndex, { from: acceptor })
+        );
+      });
+    });
+
+    describe("circuit breaker", () => {
+      it("should not allow withdrawals when contract is in stopped stage", async () => {
+        await createConfirmedBet();
+        const betResult = "ProposerWon";
+        await betchya.settleBet(betIndex, resultNameToValue(betResult), {
+          from: judge
+        });
+        await betchya.stopContract({ from: owner });
+
+        await assertFailed(() =>
+          betchya.withdraw(betIndex, { from: proposer })
+        );
+      });
+
+      it("should allow withdrawals when contract is in only withdrawal stage", async () => {
+        await createConfirmedBet();
+        const betResult = "AcceptorWon";
+        await betchya.settleBet(betIndex, resultNameToValue(betResult), {
+          from: judge
+        });
+
+        await betchya.onlyWithdrawal({ from: owner });
+
+        const balance = web3
+          .fromWei(web3.eth.getBalance(acceptor), "ether")
+          .toNumber();
+        await betchya.withdraw(betIndex, { from: acceptor });
+        const newBalance = web3
+          .fromWei(web3.eth.getBalance(acceptor), "ether")
+          .toNumber();
+
+        // Round to results to full ether to ignore transaction costs
+        assert.equal(
+          Math.round(balance) + 1,
+          Math.round(newBalance),
+          "Winner receives funds after withdrawing"
+        );
+      });
+
+      it("should allow withdraw even if in progress if in only withdrawal stage", async () => {
+        await createConfirmedBet();
+
+        await betchya.onlyWithdrawal({ from: owner });
+
+        const balance = web3
+          .fromWei(web3.eth.getBalance(acceptor), "ether")
+          .toNumber();
+        await betchya.withdraw(betIndex, { from: acceptor });
+        const newBalance = web3
+          .fromWei(web3.eth.getBalance(acceptor), "ether")
+          .toNumber();
+
+        // Round to results to full ether to ignore transaction costs
+        assert.equal(
+          Math.round(balance) + 1,
+          Math.round(newBalance),
+          "Winner receives funds after withdrawing"
+        );
+      });
+
+      it("should not allow acceptor to withdraw if hasn't deposited", async () => {
+        await betchya.createBet(acceptor, judge, "Challenged!", {
+          from: proposer,
+          value: web3.toWei(1, "ether")
+        });
+
+        // Add some extra funds in contract
+        await betchya.createBet(acceptor, judge, "Challenged!", {
+          from: otherAccount,
+          value: web3.toWei(2, "ether")
+        });
+
+        await betchya.onlyWithdrawal({ from: owner });
+
+        const balanceProposer = web3
+          .fromWei(web3.eth.getBalance(proposer), "ether")
+          .toNumber();
+        await betchya.withdraw(betIndex, { from: proposer });
+        const newBalanceProposer = web3
+          .fromWei(web3.eth.getBalance(proposer), "ether")
+          .toNumber();
+
+        // Round to results to full ether to ignore transaction costs
+        assert.equal(
+          Math.round(balanceProposer) + 1,
+          Math.round(newBalanceProposer),
+          "Proposer receives initial deposit funds after withdrawing on cancelled"
+        );
+
+        await assertFailed(() =>
+          betchya.withdraw(betIndex, { from: acceptor })
         );
       });
     });
