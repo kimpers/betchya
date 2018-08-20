@@ -1,0 +1,8 @@
+{
+  "package_name": "betchya",
+  "version": "0.0.1",
+  "dependencies": {
+    "zeppelin": "1.3.0",
+    "oraclize-api": "1.0.0"
+  }
+}
