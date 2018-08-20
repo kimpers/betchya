@@ -8,3 +8,15 @@ export const assertFailed = async promiseFn => {
 
   assert(false, "Did not fail as expected");
 };
+
+export const promisifyLogEvent = event =>
+  new Promise((resolve, reject) => {
+    event.watch((err, log) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+
+      resolve(log);
+    });
+  });
