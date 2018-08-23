@@ -2,8 +2,10 @@ import React, { Component } from "react";
 import getWeb3 from "./utils/getWeb3";
 
 import BetchyaContractDefinition from "../build/contracts/Betchya.json";
+import EthPriceJudgeDefinition from "../build/contracts/EthPriceJudge.json";
 
 import BetchyaContract from "./lib/BetchyaContract";
+import EthPriceJudgeContract from "./lib/EthPriceJudgeContract";
 
 import Home from "./pages/Home";
 
@@ -65,11 +67,17 @@ class App extends Component {
       const account = accounts[0];
 
       const betchya = contract(BetchyaContractDefinition);
+      const ethPriceJudge = contract(EthPriceJudgeDefinition);
+
       betchya.setProvider(web3.currentProvider);
-      const instance = await betchya.deployed();
+      ethPriceJudge.setProvider(web3.currentProvider);
+      const [betchyaInstance, ethPriceJudgeInstance] = await Promise.all([
+        betchya.deployed(),
+        ethPriceJudge.deployed()
+      ]);
 
       const historyEvents = ["proposer", "acceptor", "judge"].map(role =>
-        instance.BetCreated(
+        betchyaInstance.BetCreated(
           {
             [role]: account
           },
@@ -161,6 +169,11 @@ class App extends Component {
       );
 
       const betchyaContract = new BetchyaContract(web3, instance, account);
+      const ethPriceJudgeContract = new EthPriceJudgeContract(
+        web3,
+        ethPriceJudgeInstance,
+        account
+      );
       this.accountChecker = setInterval(() => {
         if (web3.eth.accounts[0] !== betchyaContract.account) {
           // Stop old interval
@@ -173,13 +186,19 @@ class App extends Component {
 
       this.setState({
         betchyaContract,
+        ethPriceJudgeContract,
         participations
       });
     });
   };
 
   render() {
-    const { message, participations, betchyaContract } = this.state;
+    const {
+      message,
+      participations,
+      betchyaContract,
+      ethPriceJudgeContract
+    } = this.state;
 
     if (!betchyaContract) {
       return null;
@@ -190,6 +209,7 @@ class App extends Component {
         message={message}
         participations={participations}
         betchyaContract={betchyaContract}
+        ethPriceJudgeContract={ethPriceJudgeContract}
         onDismiss={() => this.setState({ message: null })}
       />
     );

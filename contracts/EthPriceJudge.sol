@@ -13,10 +13,7 @@ contract EthPriceJudge is usingOraclize, Judge {
 
   constructor() {
       // Temp development address
-      OAR = OraclizeAddrResolverI(0xe1008A1a6F2dD5aEe09A06B51282Ed417a74890d);
-
-
-
+      OAR = OraclizeAddrResolverI(0x6f485C8BF6fc43eA212E93BBF8ce046C7f1cb475);
   }
 
   /**
@@ -56,7 +53,7 @@ contract EthPriceJudge is usingOraclize, Judge {
  }
 
   /**
-  * @dev returns true if currentPrice is higher than comparison price
+  * @dev returns true if current price is higher than comparison price
   */
   function judge(uint256 betsIndex, string data)
     public
