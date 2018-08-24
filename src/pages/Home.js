@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
+import { HashRouter as Router, Route, Switch } from "react-router-dom";
 import styled from "styled-components";
 import { Header, Message } from "semantic-ui-react";
 
@@ -61,6 +61,15 @@ const Home = ({ message, participations, betchyaContract, onDismiss }) => (
             <Route
               exact
               path="/"
+              component={() => <BetForm betchyaContract={betchyaContract} />}
+            />
+            <Route
+              path="/ipfs/:ipfsHash/:id"
+              component={() => <Bet betchyaContract={betchyaContract} />}
+            />
+            <Route
+              exact
+              path="/ipfs/:ipfsHash/"
               component={() => <BetForm betchyaContract={betchyaContract} />}
             />
           </div>
