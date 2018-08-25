@@ -7,7 +7,9 @@ contract CircuitBreaker is Ownable {
   enum BreakerStates { Started, OnlyWithdrawal, Stopped }
   BreakerStates public state;
 
-  constructor() {
+  constructor()
+    public
+  {
     state = BreakerStates.Started;
   }
 
