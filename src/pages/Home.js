@@ -38,6 +38,13 @@ const FullWidthMessage = styled(Message)`
   position: absolute !important;
 `;
 
+const AccountWrapper = styled.span`
+  color: rgba(0, 0, 0, 0.6);
+  font-weight: bold;
+  margin-top: 10px;
+  display: inline-block;
+`;
+
 const Home = ({ message, participations, betchyaContract, onDismiss }) => (
   <Router>
     <AppWrapper>
@@ -77,6 +84,7 @@ const Home = ({ message, participations, betchyaContract, onDismiss }) => (
               path="/ipfs/:ipfsHash/"
               component={() => <BetForm betchyaContract={betchyaContract} />}
             />
+            <AccountWrapper>Account: {betchyaContract.account}</AccountWrapper>
           </div>
         </Switch>
       </ContentWrapper>
