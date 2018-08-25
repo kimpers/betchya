@@ -19,6 +19,8 @@ class App extends Component {
     };
   }
 
+  watchers = [];
+
   componentWillMount() {
     // Get network provider and web3 instance.
     // See utils/getWeb3 for more info.
@@ -37,6 +39,10 @@ class App extends Component {
       });
   }
 
+  componentWillUnmount() {
+    this.watchers.forEach(w => w.stopWatching());
+  }
+
   handleEvent = (err, eventLog) => {
     if (err) {
       console.error(err);
@@ -52,7 +58,6 @@ class App extends Component {
   };
 
   instantiateContract = web3 => {
-    const { participations } = this.state;
     // Get accounts.
     web3.eth.getAccounts(async (error, accounts) => {
       const contract = require("truffle-contract");
@@ -141,7 +146,7 @@ class App extends Component {
         }
       };
 
-      ["proposer", "acceptor", "judge"].map(role =>
+      this.watchers = ["proposer", "acceptor", "judge"].map(role =>
         instance
           .BetCreated(
             {

@@ -547,6 +547,8 @@ contract("Betchya", accounts => {
           from: judge
         });
 
+        const watcher = betchya.BetWithdrawn();
+
         const balance = web3
           .fromWei(web3.eth.getBalance(proposer), "ether")
           .toNumber();
@@ -554,6 +556,13 @@ contract("Betchya", accounts => {
         const newBalance = web3
           .fromWei(web3.eth.getBalance(proposer), "ether")
           .toNumber();
+
+        const events = await watcher.get();
+
+        assert.equal(events.length, 1, "1 BetWithdrawn event");
+        const args = events[0].args;
+        assert.equal(args.betsIndex, 0, "BetsIndex correct in event");
+        assert.equal(args.withdrawer, proposer, "Correct withdrawer");
 
         // Round to results to full ether to ignore transaction costs
         assert.equal(
@@ -600,6 +609,7 @@ contract("Betchya", accounts => {
           from: judge
         });
 
+        const watcher = betchya.BetWithdrawn();
         const balance = web3
           .fromWei(web3.eth.getBalance(acceptor), "ether")
           .toNumber();
@@ -607,6 +617,13 @@ contract("Betchya", accounts => {
         const newBalance = web3
           .fromWei(web3.eth.getBalance(acceptor), "ether")
           .toNumber();
+
+        const events = await watcher.get();
+
+        assert.equal(events.length, 1, "1 BetWithdrawn event");
+        const args = events[0].args;
+        assert.equal(args.betsIndex, 0, "BetsIndex correct in event");
+        assert.equal(args.withdrawer, acceptor, "Correct withdrawer");
 
         // Round to results to full ether to ignore transaction costs
         assert.equal(
