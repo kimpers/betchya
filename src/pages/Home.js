@@ -33,13 +33,18 @@ const MenuRow = styled.div`
   margin-bottom: 1em;
 `;
 
+const FullWidthMessage = styled(Message)`
+  width: 100%;
+  position: absolute !important;
+`;
+
 const Home = ({ message, participations, betchyaContract, onDismiss }) => (
   <Router>
     <AppWrapper>
       {message && (
-        <Message positive header="Success" onDismiss={onDismiss}>
+        <FullWidthMessage positive header="Success" onDismiss={onDismiss}>
           {message}
-        </Message>
+        </FullWidthMessage>
       )}
 
       <ContentWrapper>
