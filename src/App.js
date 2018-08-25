@@ -41,6 +41,7 @@ class App extends Component {
 
   componentWillUnmount() {
     this.watchers.forEach(w => w.stopWatching());
+    clearInterval(this.accountChecker);
   }
 
   handleEvent = (err, eventLog) => {
@@ -160,6 +161,15 @@ class App extends Component {
       );
 
       const betchyaContract = new BetchyaContract(web3, instance, account);
+      this.accountChecker = setInterval(() => {
+        if (web3.eth.accounts[0] !== betchyaContract.account) {
+          // Stop old interval
+          clearInterval(this.accountChecker);
+
+          // It's safest to just re-initialize everything on account change
+          this.instantiateContract(web3);
+        }
+      }, 300);
 
       this.setState({
         betchyaContract,
