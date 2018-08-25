@@ -101,7 +101,8 @@ contract Betchya is CircuitBreaker {
   * @param betsIndex Current bet's element index in the bets array
   */
   event BetSettled(
-    uint256 indexed betsIndex
+    uint256 indexed betsIndex,
+    BetResults result
   );
 
   /**
@@ -110,6 +111,11 @@ contract Betchya is CircuitBreaker {
   */
   event BetCancelled(
     uint256 indexed betsIndex
+  );
+
+  event BetWithdrawn(
+    uint256  betsIndex,
+    address  withdrawer
   );
 
   Bet[] public bets;
@@ -208,7 +214,7 @@ contract Betchya is CircuitBreaker {
     bet.result = result;
     bet.stage = BetStages.Settled;
 
-    emit BetSettled(betsIndex);
+    emit BetSettled(betsIndex, bet.result);
   }
 
   /**
@@ -258,12 +264,23 @@ contract Betchya is CircuitBreaker {
 
         bet.proposerWithdrawn = true;
 
+        emit BetWithdrawn(
+          betsIndex,
+          msg.sender
+        );
+
         // On draw allow withdrawal of initial bet for each party
         bet.proposer.transfer(bet.amount);
       } else if (msg.sender == bet.acceptor) {
         require(bet.acceptorWithdrawn == false);
 
         bet.acceptorWithdrawn = true;
+
+        emit BetWithdrawn(
+          betsIndex,
+          msg.sender
+        );
+
         // On draw allow withdrawal of initial bet for each party
         bet.acceptor.transfer(bet.amount);
       } else {
@@ -277,6 +294,11 @@ contract Betchya is CircuitBreaker {
 
       bet.proposerWithdrawn = true;
 
+      emit BetWithdrawn(
+        betsIndex,
+        msg.sender
+      );
+
       // Winner gets ether from both proposer and acceptor
       bet.proposer.transfer(bet.amount * 2);
     } else if (bet.result == BetResults.AcceptorWon) {
@@ -285,6 +307,11 @@ contract Betchya is CircuitBreaker {
       require(bet.acceptorWithdrawn == false);
 
       bet.acceptorWithdrawn = true;
+
+      emit BetWithdrawn(
+        betsIndex,
+        msg.sender
+      );
 
       // Winner gets ether from both proposer and acceptor
       bet.acceptor.transfer(bet.amount * 2);
