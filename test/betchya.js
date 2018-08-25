@@ -566,8 +566,8 @@ contract("Betchya", accounts => {
 
         // Round to results to full ether to ignore transaction costs
         assert.equal(
-          Math.round(balance) + 2,
-          Math.round(newBalance),
+          Math.round(newBalance - balance),
+          2,
           "Winner receives funds after withdrawing"
         );
       });
@@ -627,8 +627,8 @@ contract("Betchya", accounts => {
 
         // Round to results to full ether to ignore transaction costs
         assert.equal(
-          Math.round(balance) + 2,
-          Math.round(newBalance),
+          Math.round(newBalance - balance),
+          2,
           "Winner receives funds after withdrawing"
         );
       });
@@ -680,8 +680,8 @@ contract("Betchya", accounts => {
 
         // Round to results to full ether to ignore transaction costs
         assert.equal(
-          Math.round(balanceProposer) + 1,
-          Math.round(newBalanceProposer),
+          Math.round(newBalanceProposer - balanceProposer),
+          1,
           "Proposer receives initial deposit funds after withdrawing on draw"
         );
 
@@ -695,8 +695,8 @@ contract("Betchya", accounts => {
 
         // Round to results to full ether to ignore transaction costs
         assert.equal(
-          Math.round(balanceAcceptor) + 1,
-          Math.round(newBalanceAcceptor),
+          Math.round(newBalanceAcceptor - balanceAcceptor),
+          1,
           "Acceptor receives initial deposit funds after withdrawing on draw"
         );
       });
@@ -723,8 +723,8 @@ contract("Betchya", accounts => {
 
         // Round to results to full ether to ignore transaction costs
         assert.equal(
-          Math.round(balanceProposer) + 1,
-          Math.round(newBalanceProposer),
+          Math.round(newBalanceProposer - balanceProposer),
+          1,
           "Proposer receives initial deposit funds after withdrawing on draw"
         );
 
@@ -742,8 +742,8 @@ contract("Betchya", accounts => {
 
         // Round to results to full ether to ignore transaction costs
         assert.equal(
-          Math.round(balanceAcceptor) + 1,
-          Math.round(newBalanceAcceptor),
+          Math.round(newBalanceAcceptor - balanceAcceptor),
+          1,
           "Acceptor receives initial deposit funds after withdrawing on draw"
         );
       });
@@ -786,8 +786,8 @@ contract("Betchya", accounts => {
 
         // Round to results to full ether to ignore transaction costs
         assert.equal(
-          Math.round(balanceProposer) + 1,
-          Math.round(newBalanceProposer),
+          Math.round(newBalanceProposer - balanceProposer),
+          1,
           "Proposer receives initial deposit funds after withdrawing on cancelled"
         );
 
@@ -801,8 +801,8 @@ contract("Betchya", accounts => {
 
         // Round to results to full ether to ignore transaction costs
         assert.equal(
-          Math.round(balanceAcceptor) + 1,
-          Math.round(newBalanceAcceptor),
+          Math.round(newBalanceAcceptor - balanceAcceptor),
+          1,
           "Acceptor receives initial deposit funds after withdrawing on cancelled"
         );
       });
@@ -834,8 +834,8 @@ contract("Betchya", accounts => {
 
         // Round to results to full ether to ignore transaction costs
         assert.equal(
-          Math.round(balanceProposer) + 1,
-          Math.round(newBalanceProposer),
+          Math.round(newBalanceProposer - balanceProposer),
+          1,
           "Proposer receives initial deposit funds after withdrawing on cancelled"
         );
 
@@ -853,8 +853,8 @@ contract("Betchya", accounts => {
 
         // Round to results to full ether to ignore transaction costs
         assert.equal(
-          Math.round(balanceAcceptor) + 1,
-          Math.round(newBalanceAcceptor),
+          Math.round(newBalanceAcceptor - balanceAcceptor),
+          1,
           "Acceptor receives initial deposit funds after withdrawing on cancelled"
         );
       });
@@ -901,8 +901,8 @@ contract("Betchya", accounts => {
 
         // Round to results to full ether to ignore transaction costs
         assert.equal(
-          Math.round(balanceProposer) + 1,
-          Math.round(newBalanceProposer),
+          Math.round(newBalanceProposer - balanceProposer),
+          1,
           "Proposer receives initial deposit funds after withdrawing on cancelled"
         );
 
@@ -945,8 +945,8 @@ contract("Betchya", accounts => {
 
         // Round to results to full ether to ignore transaction costs
         assert.equal(
-          Math.round(balance) + 1,
-          Math.round(newBalance),
+          Math.round(newBalance - balance),
+          1,
           "Winner receives funds after withdrawing"
         );
       });
@@ -966,8 +966,8 @@ contract("Betchya", accounts => {
 
         // Round to results to full ether to ignore transaction costs
         assert.equal(
-          Math.round(balance) + 1,
-          Math.round(newBalance),
+          Math.round(newBalance - balance),
+          1,
           "Winner receives funds after withdrawing"
         );
       });
@@ -996,8 +996,8 @@ contract("Betchya", accounts => {
 
         // Round to results to full ether to ignore transaction costs
         assert.equal(
-          Math.round(balanceProposer) + 1,
-          Math.round(newBalanceProposer),
+          Math.round(newBalanceProposer - balanceProposer),
+          1,
           "Proposer receives initial deposit funds after withdrawing on cancelled"
         );
 
