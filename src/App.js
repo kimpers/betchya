@@ -52,6 +52,7 @@ class App extends Component {
   };
 
   instantiateContract = web3 => {
+    const { participations } = this.state;
     // Get accounts.
     web3.eth.getAccounts(async (error, accounts) => {
       const contract = require("truffle-contract");
@@ -81,6 +82,14 @@ class App extends Component {
           return "judge";
         }
       };
+
+      const eventLogToBet = e => ({
+        ...e.args,
+        blockNumber: e.blockNumber,
+        role: role(e.args),
+        transactionHash: e.transactionHash
+      });
+
       const participations = await Promise.all(
         historyEvents.map(
           event =>
@@ -91,11 +100,7 @@ class App extends Component {
                   return;
                 }
 
-                const eventData = eventLog.map(e => ({
-                  ...e.args,
-                  blockNumber: e.blockNumber,
-                  role: role(e.args)
-                }));
+                const eventData = eventLog.map(eventLogToBet);
                 resolve(eventData);
               });
             })
@@ -103,6 +108,51 @@ class App extends Component {
       )
         .then(p => p.reduce((memo, e) => memo.concat(e), []))
         .then(l => l.sort((a, b) => b.blockNumber - a.blockNumber));
+
+      const handleUpdate = (error, eventLog) => {
+        if (error) {
+          console.error(error);
+        }
+
+        const eventData = eventLogToBet(eventLog);
+
+        // Make sure it's a new bet
+        if (
+          !participations.some(
+            e => e.transactionHash === eventData.transactionHash
+          )
+        ) {
+          const updates = {
+            participations: [eventData, ...participations]
+          };
+
+          if (eventData.proposer === account) {
+            updates.message = "Bet successfully created";
+
+            setTimeout(
+              () =>
+                this.setState({
+                  message: null
+                }),
+              10000
+            );
+          }
+          this.setState(updates);
+        }
+      };
+
+      ["proposer", "acceptor", "judge"].map(role =>
+        instance
+          .BetCreated(
+            {
+              [role]: account
+            },
+            {
+              fromBlock: "latest"
+            }
+          )
+          .watch(handleUpdate)
+      );
 
       const betchyaContract = new BetchyaContract(web3, instance, account);
 
