@@ -31,7 +31,7 @@ contract("EthPriceJudge", accounts => {
 
   const updateAndGetPrice = async () => {
     const priceWatcher = promisifyLogEvent(
-      ethPriceJudge.PriceUpdate({ fromBlock: "latest" })
+      ethPriceJudge.LogPriceUpdate({ fromBlock: "latest" })
     );
 
     await ethPriceJudge.updatePrice({ from: proposer });
@@ -42,7 +42,7 @@ contract("EthPriceJudge", accounts => {
   describe("updatePrice", async () => {
     it("should update price & updatedAt", async () => {
       const priceWatcher = promisifyLogEvent(
-        ethPriceJudge.PriceUpdate({ fromBlock: "latest" })
+        ethPriceJudge.LogPriceUpdate({ fromBlock: "latest" })
       );
       await ethPriceJudge.updatePrice({ from: proposer });
       const eventPrice = await priceWatcher.then(e =>
