@@ -68,7 +68,7 @@ contract("EthPriceJudge", accounts => {
   describe("confirmJudge", () => {
     it("it should confirm judge when starting bet", async () => {
       await createConfirmedBet(10);
-      const judgeConfirmedWatcher = betchya.BetJudgeConfirmed();
+      const judgeConfirmedWatcher = betchya.LogBetJudgeConfirmed();
       await ethPriceJudge.confirmJudge(betIndex);
       const events = judgeConfirmedWatcher.get();
       assert.equal(events.length, 1, "1 Judge confirmed event");
@@ -84,11 +84,11 @@ contract("EthPriceJudge", accounts => {
       await ethPriceJudge.confirmJudge(betIndex);
       await updateAndGetPrice();
 
-      const betSettledWatcher = betchya.BetSettled();
+      const betSettledWatcher = betchya.LogBetSettled();
       await ethPriceJudge.judge(betIndex);
 
       const events = betSettledWatcher.get();
-      assert.equal(events.length, 1, "1 BetSettled event");
+      assert.equal(events.length, 1, "1 LogBetSettled event");
       const args = events[0].args;
       assert.equal(args.betsIndex.toNumber(), 0, "Correct betsIndex");
       assert.equal(
@@ -104,11 +104,11 @@ contract("EthPriceJudge", accounts => {
       await ethPriceJudge.confirmJudge(betIndex);
       await updateAndGetPrice();
 
-      const betSettledWatcher = betchya.BetSettled();
+      const betSettledWatcher = betchya.LogBetSettled();
       await ethPriceJudge.judge(betIndex);
 
       const events = betSettledWatcher.get();
-      assert.equal(events.length, 1, "1 BetSettled event");
+      assert.equal(events.length, 1, "1 LogBetSettled event");
       const args = events[0].args;
       assert.equal(args.betsIndex.toNumber(), 0, "Correct betsIndex");
       assert.equal(

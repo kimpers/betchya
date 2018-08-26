@@ -50,7 +50,7 @@ class App extends Component {
       return;
     }
 
-    if (eventLog.event === "BetCreated") {
+    if (eventLog.event === "LogBetCreated") {
       this.setState({
         message:
           "Bet successfully created! Awaiting acceptor and judge to confirm."
@@ -70,7 +70,7 @@ class App extends Component {
       const betchyaInstance = await betchya.deployed();
 
       const historyEvents = ["proposer", "acceptor", "judge"].map(role =>
-        betchyaInstance.BetCreated(
+        betchyaInstance.LogBetCreated(
           {
             [role]: account
           },
@@ -150,7 +150,7 @@ class App extends Component {
 
       this.watchers = ["proposer", "acceptor", "judge"].map(role =>
         betchyaInstance
-          .BetCreated(
+          .LogBetCreated(
             {
               [role]: account
             },

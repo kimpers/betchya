@@ -42,7 +42,7 @@ export default class BetchyaContract {
 
   getLogsForBet = bet => {
     const { proposer, acceptor, judge } = bet;
-    const log = this.contract.BetCreated(
+    const log = this.contract.LogBetCreated(
       {
         proposer,
         acceptor,
