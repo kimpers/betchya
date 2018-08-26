@@ -74,7 +74,7 @@ class Bet extends React.Component {
       }
     } = this.props;
 
-    const bet = await betchyaContract.getBet(id);
+    let bet = await betchyaContract.getBet(id);
 
     // This should only ever be an array of 1 element or an empty array
     const logs = await betchyaContract
@@ -113,11 +113,13 @@ class Bet extends React.Component {
         ]
       ])(logEvent);
 
+      bet = {
+        ...bet,
+        ...updates
+      };
+
       this.setState({
-        bet: {
-          ...bet,
-          ...updates
-        }
+        bet
       });
     };
 
