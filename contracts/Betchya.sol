@@ -21,6 +21,7 @@ contract Betchya is CircuitBreaker {
     bool proposerWithdrawn;
     bool acceptorWithdrawn;
     bool acceptorDeposited;
+    uint256 createdAt;
   }
 
   /**
@@ -158,7 +159,8 @@ contract Betchya is CircuitBreaker {
       BetResults.NotSettled,
       false,
       false,
-      false
+      false,
+      now
     );
 
 
@@ -212,6 +214,7 @@ contract Betchya is CircuitBreaker {
   function getBetDescription(uint betsIndex)
     public
     view
+    contractStarted
     returns (string)
   {
     return bets[betsIndex].description;
@@ -239,6 +242,8 @@ contract Betchya is CircuitBreaker {
     emit LogBetSettled(betsIndex, bet.result);
   }
 
+  uint constant oneYearInSeconds = 31536000;
+
   /**
   * @dev Cancels a bet that has not yet started when called by either proposer or acceptor
   * @param betsIndex Current bet's element index in the bets array
@@ -250,7 +255,12 @@ contract Betchya is CircuitBreaker {
     Bet storage bet = bets[betsIndex];
 
     // Only allow bet to be cancelled before it's in progress
-    require(bet.stage == BetStages.Created || bet.stage == BetStages.Accepted);
+    require(bet.stage == BetStages.Created ||
+            bet.stage == BetStages.Accepted ||
+            // Participants should always be able to cancel the bet after 1 year
+            // in order to mitigate the risk of participant drop off
+            // locking the state of the bet
+            now.sub(bet.createdAt) > oneYearInSeconds);
     // Bets can be cancelled by either proposer or acceptor
     require(msg.sender == bet.proposer || msg.sender == bet.acceptor);
 
