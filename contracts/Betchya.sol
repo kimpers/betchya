@@ -136,6 +136,8 @@ contract Betchya is CircuitBreaker {
     // Acceptor and jugde can't be 0x0
     require(acceptor != address(0));
     require(judge != address(0));
+    // Don't allow proposer and acceptor to be same address
+    require(msg.sender != acceptor);
 
     // Don't allow empty descriptions
     require(bytes(description).length != 0);
