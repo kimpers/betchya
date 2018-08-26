@@ -142,8 +142,11 @@ contract Betchya is CircuitBreaker {
     // Don't allow proposer and acceptor to be same address
     require(msg.sender != acceptor);
 
+    uint256 descriptionLength = bytes(description).length;
     // Don't allow empty descriptions
-    require(bytes(description).length != 0);
+    require(descriptionLength != 0);
+    // Allow max 255 bytes description
+    require(descriptionLength < 256);
 
     Bet memory bet = Bet(
       msg.sender,
@@ -160,7 +163,7 @@ contract Betchya is CircuitBreaker {
 
 
 
-    uint index =  bets.push(bet) - 1;
+    uint256 index =  bets.push(bet) - 1;
     emit LogBetCreated(msg.sender, acceptor, judge, description, index);
   }
 
