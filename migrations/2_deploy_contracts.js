@@ -3,5 +3,7 @@ const EthPriceJudge = artifacts.require("./EthPriceJudge.sol");
 
 module.exports = async deployer => {
   await deployer.deploy(Betchya);
-  await deployer.deploy(EthPriceJudge, Betchya.address);
+  // Disabled for easier reviewing
+  // Enable this if you want to test the Oracle contract
+  // await deployer.deploy(EthPriceJudge, Betchya.address);
 };

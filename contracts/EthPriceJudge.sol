@@ -27,7 +27,13 @@ contract EthPriceJudge is usingOraclize{
   constructor(address _betchya)
     public
   {
-      // Temp development address
+      // To test Oracle:
+      // 1. Install ethereum-bridge (https://github.com/oraclize/ethereum-bridge)
+      // 2. Start it using ethereum-bridge -a 9 --dev
+      // 3. Copy the output OAR and replace the line below
+      // 4. Uncomment the line deploying it in migrations/2_deploy_contracts.js
+      // 5. Migrate contracts
+      // 6. Remove .skip from ethPriceJudge test file and run tests
       OAR = OraclizeAddrResolverI(0x6f485C8BF6fc43eA212E93BBF8ce046C7f1cb475);
       betchya = TrustedBetchya(_betchya);
   }
