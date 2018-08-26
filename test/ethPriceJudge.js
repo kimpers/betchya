@@ -5,7 +5,7 @@ const Betchya = artifacts.require("./Betchya.sol");
 import { toResult } from "../src/lib/contractUtils";
 import { promisifyLogEvent } from "./util";
 
-contract("EthPriceJudge", accounts => {
+contract.skip("EthPriceJudge", accounts => {
   // New contract for every test to avoid lingering state
   let betchya;
   let ethPriceJudge;
