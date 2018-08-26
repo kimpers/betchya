@@ -1,11 +1,13 @@
-pragma solidity ^0.4.24;
+pragma solidity 0.4.24;
 
 import "oraclize-api/contracts/usingOraclize.sol";
+
+import "zeppelin/math/SafeMath.sol";
 
 /**
 * @dev Abstract contract containing the Betchya function definitions that EthPriceJudge needs
 */
-contract BetchyaContract {
+contract TrustedBetchya {
   enum BetStages { Created, Accepted, InProgress, Settled, Cancelled }
   enum BetResults { NotSettled, ProposerWon, AcceptorWon, Draw }
 
@@ -16,23 +18,25 @@ contract BetchyaContract {
 
 /** @title EthPriceJudge */
 contract EthPriceJudge is usingOraclize{
+  using SafeMath for uint256;
+
   uint256 public currentPrice;
   uint256 public updatedAt;
-  BetchyaContract betchya;
+  TrustedBetchya betchya;
 
   constructor(address _betchya)
     public
   {
       // Temp development address
       OAR = OraclizeAddrResolverI(0x6f485C8BF6fc43eA212E93BBF8ce046C7f1cb475);
-      betchya = BetchyaContract(_betchya);
+      betchya = TrustedBetchya(_betchya);
   }
 
   /**
   * @dev Event with new Ether - USD price
   * @param currentPrice price of ether in USD
   */
-  event PriceUpdate(
+  event LogPriceUpdate(
     uint256 currentPrice
   );
 
@@ -51,12 +55,12 @@ contract EthPriceJudge is usingOraclize{
   function __callback(bytes32, string result)
     public
   {
-     if (msg.sender != oraclize_cbAddress()) revert();
+    require(msg.sender == oraclize_cbAddress());
 
      currentPrice = parseInt(result);
      updatedAt = now;
 
-     emit PriceUpdate(currentPrice);
+     emit LogPriceUpdate(currentPrice);
  }
 
   /**
@@ -79,15 +83,15 @@ contract EthPriceJudge is usingOraclize{
     public
   {
     // Only allow 10 minutes old results
-    require(now - 600 <= updatedAt);
+    require(now.sub(updatedAt) < 600);
     string memory description = betchya.getBetDescription(betsIndex);
 
 
     uint256 judgePrice = parseInt(description);
 
-    BetchyaContract.BetResults result = currentPrice > judgePrice ?
-      BetchyaContract.BetResults.ProposerWon :
-      BetchyaContract.BetResults.AcceptorWon;
+    TrustedBetchya.BetResults result = currentPrice > judgePrice ?
+      TrustedBetchya.BetResults.ProposerWon :
+      TrustedBetchya.BetResults.AcceptorWon;
 
     betchya.settleBet(betsIndex, result);
   }
