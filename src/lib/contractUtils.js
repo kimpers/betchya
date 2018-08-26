@@ -44,7 +44,8 @@ export const toBetObject = ([
   stage,
   result,
   proposerWithdrawn,
-  acceptorWithdrawn
+  acceptorWithdrawn,
+  createdAt
 ]) => ({
   proposer,
   acceptor,
@@ -54,5 +55,6 @@ export const toBetObject = ([
   stage: toStage(stage),
   result: toResult(result),
   proposerWithdrawn,
-  acceptorWithdrawn
+  acceptorWithdrawn,
+  createdAt
 });
