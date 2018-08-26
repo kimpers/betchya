@@ -45,13 +45,7 @@ const AccountWrapper = styled.span`
   display: inline-block;
 `;
 
-const Home = ({
-  message,
-  participations,
-  betchyaContract,
-  ethPriceJudgeContract,
-  onDismiss
-}) => (
+const Home = ({ message, participations, betchyaContract, onDismiss }) => (
   <Router>
     <AppWrapper>
       {message && (
@@ -74,22 +68,12 @@ const Home = ({
           >
             <Route
               path="/:id"
-              component={() => (
-                <Bet
-                  betchyaContract={betchyaContract}
-                  ethPriceJudgeContract={ethPriceJudgeContract}
-                />
-              )}
+              component={() => <Bet betchyaContract={betchyaContract} />}
             />
             <Route
               exact
               path="/"
-              component={() => (
-                <BetForm
-                  betchyaContract={betchyaContract}
-                  ethPriceJudgeContract={ethPriceJudgeContract}
-                />
-              )}
+              component={() => <BetForm betchyaContract={betchyaContract} />}
             />
             <Route
               path="/ipfs/:ipfsHash/:id"
