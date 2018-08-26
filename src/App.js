@@ -2,10 +2,8 @@ import React, { Component } from "react";
 import getWeb3 from "./utils/getWeb3";
 
 import BetchyaContractDefinition from "../build/contracts/Betchya.json";
-import EthPriceJudgeDefinition from "../build/contracts/EthPriceJudge.json";
 
 import BetchyaContract from "./lib/BetchyaContract";
-import EthPriceJudgeContract from "./lib/EthPriceJudgeContract";
 
 import Home from "./pages/Home";
 
@@ -67,14 +65,9 @@ class App extends Component {
       const account = accounts[0];
 
       const betchya = contract(BetchyaContractDefinition);
-      const ethPriceJudge = contract(EthPriceJudgeDefinition);
 
       betchya.setProvider(web3.currentProvider);
-      ethPriceJudge.setProvider(web3.currentProvider);
-      const [betchyaInstance, ethPriceJudgeInstance] = await Promise.all([
-        betchya.deployed(),
-        ethPriceJudge.deployed()
-      ]);
+      const betchyaInstance = await betchya.deployed();
 
       const historyEvents = ["proposer", "acceptor", "judge"].map(role =>
         betchyaInstance.BetCreated(
@@ -186,19 +179,13 @@ class App extends Component {
 
       this.setState({
         betchyaContract,
-        ethPriceJudgeContract,
         participations
       });
     });
   };
 
   render() {
-    const {
-      message,
-      participations,
-      betchyaContract,
-      ethPriceJudgeContract
-    } = this.state;
+    const { message, participations, betchyaContract } = this.state;
 
     if (!betchyaContract) {
       return null;
@@ -209,7 +196,6 @@ class App extends Component {
         message={message}
         participations={participations}
         betchyaContract={betchyaContract}
-        ethPriceJudgeContract={ethPriceJudgeContract}
         onDismiss={() => this.setState({ message: null })}
       />
     );
