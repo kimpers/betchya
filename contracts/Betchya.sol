@@ -12,6 +12,7 @@ contract Betchya is CircuitBreaker {
     address acceptor;
     address judge;
     uint256 amount;
+    string description;
     BetStages stage;
     BetResults result;
     bool proposerWithdrawn;
@@ -144,6 +145,7 @@ contract Betchya is CircuitBreaker {
       acceptor,
       judge,
       msg.value,
+      description,
       BetStages.Created,
       BetResults.NotSettled,
       false,
@@ -193,6 +195,14 @@ contract Betchya is CircuitBreaker {
 
     bet.stage = BetStages.InProgress;
     emit BetJudgeConfirmed(betsIndex);
+  }
+
+  function getBetDescription(uint betsIndex)
+    public
+    view
+    returns (string)
+  {
+    return bets[betsIndex].description;
   }
 
   /**

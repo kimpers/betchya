@@ -156,7 +156,7 @@ class App extends Component {
       };
 
       this.watchers = ["proposer", "acceptor", "judge"].map(role =>
-        instance
+        betchyaInstance
           .BetCreated(
             {
               [role]: account
@@ -168,12 +168,12 @@ class App extends Component {
           .watch(handleUpdate)
       );
 
-      const betchyaContract = new BetchyaContract(web3, instance, account);
-      const ethPriceJudgeContract = new EthPriceJudgeContract(
+      const betchyaContract = new BetchyaContract(
         web3,
-        ethPriceJudgeInstance,
+        betchyaInstance,
         account
       );
+
       this.accountChecker = setInterval(() => {
         if (web3.eth.accounts[0] !== betchyaContract.account) {
           // Stop old interval
