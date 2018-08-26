@@ -30,10 +30,10 @@ export const toResult = num => results[num];
 export const resultNameToValue = name => results.indexOf(name);
 export const participationTypes = ["Proposer", "Acceptor", "Judge"];
 
-export const EVENT_BET_ACCEPTED = "BetAccepted";
-export const EVENT_BET_JUDGE_CONFIRMED = "BetJudgeConfirmed";
-export const EVENT_BET_SETTLED = "BetSettled";
-export const EVENT_BET_WITHDRAWN = "BetWithdrawn";
+export const EVENT_BET_ACCEPTED = "LogBetAccepted";
+export const EVENT_BET_JUDGE_CONFIRMED = "LogBetJudgeConfirmed";
+export const EVENT_BET_SETTLED = "LogBetSettled";
+export const EVENT_BET_WITHDRAWN = "LogBetWithdrawn";
 
 export const toBetObject = ([
   proposer,

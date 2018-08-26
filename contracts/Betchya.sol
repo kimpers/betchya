@@ -1,9 +1,12 @@
 pragma solidity ^0.4.24;
 
 import "./CircuitBreaker.sol";
+import "zeppelin/math/SafeMath.sol";
 
 /** @title Betchya */
 contract Betchya is CircuitBreaker {
+  using SafeMath for uint256;
+
   enum BetStages { Created, Accepted, InProgress, Settled, Cancelled }
   enum BetResults { NotSettled, ProposerWon, AcceptorWon, Draw }
 
@@ -72,7 +75,7 @@ contract Betchya is CircuitBreaker {
   * @param judge Address of the user suggested as bet judge
   * @param betsIndex Current bet's element index in the bets array
   */
-  event BetCreated(
+  event LogBetCreated(
     address indexed proposer,
     address indexed acceptor,
     address indexed judge,
@@ -85,7 +88,7 @@ contract Betchya is CircuitBreaker {
   * @dev Event confirming that the bet has been accepted by the acceptor and matching amount has been transferred
   * @param betsIndex Current bet's element index in the bets array
   */
-  event BetAccepted(
+  event LogBetAccepted(
     uint256 indexed betsIndex
   );
 
@@ -93,7 +96,7 @@ contract Betchya is CircuitBreaker {
   * @dev Event confirming that the juge has confirmed to jugde the bet
   * @param betsIndex Current bet's element index in the bets array
   */
-  event BetJudgeConfirmed(
+  event LogBetJudgeConfirmed(
     uint256 indexed betsIndex
   );
 
@@ -101,7 +104,7 @@ contract Betchya is CircuitBreaker {
   * @dev Event confirming that the juge has settled the result of the bet
   * @param betsIndex Current bet's element index in the bets array
   */
-  event BetSettled(
+  event LogBetSettled(
     uint256 indexed betsIndex,
     BetResults result
   );
@@ -110,11 +113,11 @@ contract Betchya is CircuitBreaker {
   * @dev Event confirming that a specfic bet has been cancelled (before starting)
   * @param betsIndex Current bet's element index in the bets array
   */
-  event BetCancelled(
+  event LogBetCancelled(
     uint256 indexed betsIndex
   );
 
-  event BetWithdrawn(
+  event LogBetWithdrawn(
     uint256  betsIndex,
     address  withdrawer
   );
@@ -158,7 +161,7 @@ contract Betchya is CircuitBreaker {
 
 
     uint index =  bets.push(bet) - 1;
-    emit BetCreated(msg.sender, acceptor, judge, description, index);
+    emit LogBetCreated(msg.sender, acceptor, judge, description, index);
   }
 
   /**
@@ -180,7 +183,7 @@ contract Betchya is CircuitBreaker {
 
     // Transition into "Accepted" stage
     bet.stage = BetStages.Accepted;
-    emit BetAccepted(betsIndex);
+    emit LogBetAccepted(betsIndex);
   }
 
   /**
@@ -196,9 +199,13 @@ contract Betchya is CircuitBreaker {
     Bet storage bet = bets[betsIndex];
 
     bet.stage = BetStages.InProgress;
-    emit BetJudgeConfirmed(betsIndex);
+    emit LogBetJudgeConfirmed(betsIndex);
   }
 
+  /**
+  * @dev Returns the description string for a bet
+  * @param betsIndex Current bet's element index in the bets array
+  */
   function getBetDescription(uint betsIndex)
     public
     view
@@ -226,7 +233,7 @@ contract Betchya is CircuitBreaker {
     bet.result = result;
     bet.stage = BetStages.Settled;
 
-    emit BetSettled(betsIndex, bet.result);
+    emit LogBetSettled(betsIndex, bet.result);
   }
 
   /**
@@ -246,7 +253,7 @@ contract Betchya is CircuitBreaker {
 
     bet.stage = BetStages.Cancelled;
 
-    emit BetCancelled(betsIndex);
+    emit LogBetCancelled(betsIndex);
   }
 
   function withdraw(uint betsIndex)
@@ -276,7 +283,7 @@ contract Betchya is CircuitBreaker {
 
         bet.proposerWithdrawn = true;
 
-        emit BetWithdrawn(
+        emit LogBetWithdrawn(
           betsIndex,
           msg.sender
         );
@@ -288,7 +295,7 @@ contract Betchya is CircuitBreaker {
 
         bet.acceptorWithdrawn = true;
 
-        emit BetWithdrawn(
+        emit LogBetWithdrawn(
           betsIndex,
           msg.sender
         );
@@ -306,7 +313,7 @@ contract Betchya is CircuitBreaker {
 
       bet.proposerWithdrawn = true;
 
-      emit BetWithdrawn(
+      emit LogBetWithdrawn(
         betsIndex,
         msg.sender
       );
@@ -320,7 +327,7 @@ contract Betchya is CircuitBreaker {
 
       bet.acceptorWithdrawn = true;
 
-      emit BetWithdrawn(
+      emit LogBetWithdrawn(
         betsIndex,
         msg.sender
       );

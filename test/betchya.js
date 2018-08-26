@@ -31,7 +31,7 @@ contract("Betchya", accounts => {
 
   describe("createBet", () => {
     it("should create a bet with valid params", async () => {
-      const betCreatedWatcher = betchya.BetCreated();
+      const betCreatedWatcher = betchya.LogBetCreated();
 
       await betchya.createBet(acceptor, judge, "Challenged!", {
         from: proposer,
@@ -39,7 +39,7 @@ contract("Betchya", accounts => {
       });
 
       const events = await betCreatedWatcher.get();
-      assert.equal(events.length, 1, "1 BetCreated event emitted");
+      assert.equal(events.length, 1, "1 LogBetCreated event emitted");
 
       const eventArgs = events[0].args;
       assert.equal(
@@ -104,7 +104,7 @@ contract("Betchya", accounts => {
 
   describe("acceptBet", () => {
     it("should accept accept a bet if the acceptor calls with valid params", async () => {
-      const betAcceptedWatcher = betchya.BetAccepted();
+      const betAcceptedWatcher = betchya.LogBetAccepted();
 
       await betchya.createBet(acceptor, judge, "Challenged!", {
         from: proposer,
@@ -114,7 +114,7 @@ contract("Betchya", accounts => {
       await betchya.acceptBet(betIndex, { from: acceptor, value: 1 });
 
       const events = await betAcceptedWatcher.get();
-      assert.equal(events.length, 1, "1 BetAccepted event emitted");
+      assert.equal(events.length, 1, "1 LogBetAccepted event emitted");
       assert.equal(
         events[0].args.betsIndex,
         betIndex,
@@ -192,7 +192,7 @@ contract("Betchya", accounts => {
 
   describe("confirmJudge", () => {
     it("should allow judge address to accept judge position", async () => {
-      const judgeConfirmedWatcher = betchya.BetJudgeConfirmed();
+      const judgeConfirmedWatcher = betchya.LogBetJudgeConfirmed();
 
       // Create and accept bet before confirming judge
       await betchya.createBet(acceptor, judge, "Challenged!", {
@@ -278,7 +278,7 @@ contract("Betchya", accounts => {
 
   describe("settleBet", () => {
     it("should settle bet if called by the judge", async () => {
-      const betSettledWatcher = betchya.BetSettled();
+      const betSettledWatcher = betchya.LogBetSettled();
       // Create, accept bet, accept judge before settling bet
       await betchya.createBet(acceptor, judge, "Challenged!", {
         from: proposer,
@@ -298,7 +298,7 @@ contract("Betchya", accounts => {
       });
 
       const events = await betSettledWatcher.get();
-      assert.equal(events.length, 1, "1 BetSettled event emitted");
+      assert.equal(events.length, 1, "1 LogBetSettled event emitted");
       assert.equal(events[0].args.betsIndex, betIndex, "betIndex is unchanged");
 
       const bet = await betchya.bets.call(betIndex).then(toBetObject);
@@ -394,14 +394,14 @@ contract("Betchya", accounts => {
         value: 1
       });
 
-      const betCancelledWatcher = betchya.BetCancelled();
+      const betCancelledWatcher = betchya.LogBetCancelled();
       await betchya.cancelBet(betIndex, {
         from: proposer
       });
 
       const events = await betCancelledWatcher.get();
 
-      assert.equal(events.length, 1, "1 BetCancelled event");
+      assert.equal(events.length, 1, "1 LogBetCancelled event");
       assert.equal(events[0].args.betsIndex, betIndex, "betsIndex is correct");
 
       const bet = await betchya.bets.call(betIndex).then(toBetObject);
@@ -414,7 +414,7 @@ contract("Betchya", accounts => {
         value: 1
       });
 
-      const betCancelledWatcher = betchya.BetCancelled();
+      const betCancelledWatcher = betchya.LogBetCancelled();
 
       await betchya.cancelBet(betIndex, {
         from: acceptor
@@ -422,7 +422,7 @@ contract("Betchya", accounts => {
 
       const events = await betCancelledWatcher.get();
 
-      assert.equal(events.length, 1, "1 BetCancelled event");
+      assert.equal(events.length, 1, "1 LogBetCancelled event");
       assert.equal(events[0].args.betsIndex, betIndex, "betsIndex is correct");
 
       const bet = await betchya.bets.call(betIndex).then(toBetObject);
@@ -437,7 +437,7 @@ contract("Betchya", accounts => {
 
       await betchya.acceptBet(betIndex, { from: acceptor, value: 1 });
 
-      const betCancelledWatcher = betchya.BetCancelled();
+      const betCancelledWatcher = betchya.LogBetCancelled();
 
       await betchya.cancelBet(betIndex, {
         from: proposer
@@ -445,7 +445,7 @@ contract("Betchya", accounts => {
 
       const events = await betCancelledWatcher.get();
 
-      assert.equal(events.length, 1, "1 BetCancelled event");
+      assert.equal(events.length, 1, "1 LogBetCancelled event");
       assert.equal(events[0].args.betsIndex, betIndex, "betsIndex is correct");
 
       const bet = await betchya.bets.call(betIndex).then(toBetObject);
@@ -460,7 +460,7 @@ contract("Betchya", accounts => {
 
       await betchya.acceptBet(betIndex, { from: acceptor, value: 1 });
 
-      const betCancelledWatcher = betchya.BetCancelled();
+      const betCancelledWatcher = betchya.LogBetCancelled();
 
       await betchya.cancelBet(betIndex, {
         from: acceptor
@@ -468,7 +468,7 @@ contract("Betchya", accounts => {
 
       const events = await betCancelledWatcher.get();
 
-      assert.equal(events.length, 1, "1 BetCancelled event");
+      assert.equal(events.length, 1, "1 LogBetCancelled event");
       assert.equal(events[0].args.betsIndex, betIndex, "betsIndex is correct");
 
       const bet = await betchya.bets.call(betIndex).then(toBetObject);
@@ -547,7 +547,7 @@ contract("Betchya", accounts => {
           from: judge
         });
 
-        const watcher = betchya.BetWithdrawn();
+        const watcher = betchya.LogBetWithdrawn();
 
         const balance = web3
           .fromWei(web3.eth.getBalance(proposer), "ether")
@@ -559,7 +559,7 @@ contract("Betchya", accounts => {
 
         const events = await watcher.get();
 
-        assert.equal(events.length, 1, "1 BetWithdrawn event");
+        assert.equal(events.length, 1, "1 LogBetWithdrawn event");
         const args = events[0].args;
         assert.equal(args.betsIndex, 0, "BetsIndex correct in event");
         assert.equal(args.withdrawer, proposer, "Correct withdrawer");
@@ -609,7 +609,7 @@ contract("Betchya", accounts => {
           from: judge
         });
 
-        const watcher = betchya.BetWithdrawn();
+        const watcher = betchya.LogBetWithdrawn();
         const balance = web3
           .fromWei(web3.eth.getBalance(acceptor), "ether")
           .toNumber();
@@ -620,7 +620,7 @@ contract("Betchya", accounts => {
 
         const events = await watcher.get();
 
-        assert.equal(events.length, 1, "1 BetWithdrawn event");
+        assert.equal(events.length, 1, "1 LogBetWithdrawn event");
         const args = events[0].args;
         assert.equal(args.betsIndex, 0, "BetsIndex correct in event");
         assert.equal(args.withdrawer, acceptor, "Correct withdrawer");
