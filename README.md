@@ -1,4 +1,5 @@
 # Betchya - decentralized betting
+## Consensys Academy 2018 final project
 
 ## What is Betchya
 Betchya is a peer-to-peer betting/challenge dapp. Betchya allows users to challenge each other with bets of ether on events or actions that they will take.
