@@ -31,3 +31,9 @@ The contract implements the circuit breaker patter. In case of any issues the co
 
 In case of any severe issue found with the contract the administrator can pause the contract completely or set it to only allow users to withdraw their funds while a solution to the problem is developed and deployed. Before going live on the main net this contract will also implement the upgradable contract pattern to allow for fixing of contract issues post deploy.
 
+## Not used design patterns
+### Mortal
+Contract does not use the mortal pattern allowing the owener of the contract to `selfdestruct` the contract and transfer funds as this would add a risk of all of the user's funds getting stolen by the contract owner account.
+
+### Upgradable contract
+The contract does not use the upgradable contract pattern (for now). This will be implemented before going live on the mainnet as it is critical to be able to fix issues post deploy.
