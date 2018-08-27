@@ -12,6 +12,7 @@ import {
   STAGE_IN_PROGRESS,
   RESULT_PROPOSER_WON,
   RESULT_ACCEPTOR_WON,
+  RESULT_NOT_SETTLED,
   RESULT_DRAW,
   EVENT_BET_ACCEPTED,
   EVENT_BET_JUDGE_CONFIRMED,
@@ -173,10 +174,15 @@ class Bet extends React.Component {
         <Header
           as="h2"
           style={{
-            color: "rgba(0, 0, 0, 0.6)"
+            color: "rgba(0, 0, 0, 0.6)",
+            display: "flex",
+            justifyContent: "space-around"
           }}
         >
-          Stage: {bet.stage}
+          <span>Stage: {bet.stage}</span>
+          {bet.result !== RESULT_NOT_SETTLED && (
+            <span>Result: {bet.result}</span>
+          )}
         </Header>
         <BetForm
           betchyaContract={betchyaContract}
