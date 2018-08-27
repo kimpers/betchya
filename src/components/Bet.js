@@ -176,7 +176,7 @@ class Bet extends React.Component {
           style={{
             color: "rgba(0, 0, 0, 0.6)",
             display: "flex",
-            justifyContent: "space-around"
+            justifyContent: "space-between"
           }}
         >
           <span>Stage: {bet.stage}</span>
