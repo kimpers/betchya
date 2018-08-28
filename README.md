@@ -64,5 +64,5 @@ Betchya has an Oraclize contract for betting on the ETH-USD price on GDAX. This 
 ## Strech goals implemented
 * Project uses Oracle: Oracle integration (see Testing Oracle contract)
 * Testnet Deployment: Contract deployed to Rinkeby (see `deployed_addresses.txt`)
-* IPFS: Betchya hosted on IPFS at [https://gateway.ipfs.io/ipfs/QmUEPsmH6QUWP7yUeYL47GkDFiJGikKZgLgUy4F5UBTLA5](https://gateway.ipfs.io/ipfs/QmUEPsmH6QUWP7yUeYL47GkDFiJGikKZgLgUy4F5UBTLA5) (**WARNING** very slow to load, might require refresh if it gets stuck)
+* IPFS: Betchya hosted on IPFS at [https://ipfs.infura.io/ipfs/QmW34oYSpkREtEu7e2mxd8VBLKrenQECZcjr2zu9j3fk4b](https://ipfs.infura.io/ipfs/QmW34oYSpkREtEu7e2mxd8VBLKrenQECZcjr2zu9j3fk4b) or [https://gateway.ipfs.io/ipfs/QmW34oYSpkREtEu7e2mxd8VBLKrenQECZcjr2zu9j3fk4b](https://gateway.ipfs.io/ipfs/QmW34oYSpkREtEu7e2mxd8VBLKrenQECZcjr2zu9j3fk4b)(**WARNING** very slow to load, might require refresh if it gets stuck)
 
