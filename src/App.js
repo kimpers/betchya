@@ -15,7 +15,8 @@ class App extends Component {
       storageValue: 0,
       web3: null,
       contractMethods: null,
-      message: null
+      message: null,
+      participations: []
     };
   }
 
@@ -97,7 +98,7 @@ class App extends Component {
         transactionHash: e.transactionHash
       });
 
-      const participations = await Promise.all(
+      Promise.all(
         historyEvents.map(
           event =>
             new Promise((resolve, reject) => {
@@ -114,12 +115,18 @@ class App extends Component {
         )
       )
         .then(p => p.reduce((memo, e) => memo.concat(e), []))
-        .then(l => l.sort((a, b) => b.blockNumber - a.blockNumber));
+        .then(l => l.sort((a, b) => b.blockNumber - a.blockNumber))
+        .then(participations => {
+          this.setState({ participations });
+        });
 
       const handleUpdate = (error, eventLog) => {
         if (error) {
           console.error(error);
+          return;
         }
+
+        const { participations } = this.state;
 
         const eventData = eventLogToBet(eventLog);
 
@@ -178,8 +185,7 @@ class App extends Component {
       }, 300);
 
       this.setState({
-        betchyaContract,
-        participations
+        betchyaContract
       });
     });
   };
@@ -188,7 +194,7 @@ class App extends Component {
     const { message, participations, betchyaContract } = this.state;
 
     if (!betchyaContract) {
-      return null;
+      return <span>Loading...</span>;
     }
 
     return (
