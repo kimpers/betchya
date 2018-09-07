@@ -257,10 +257,10 @@ contract Betchya is CircuitBreaker {
     // Only allow bet to be cancelled before it's in progress
     require(bet.stage == BetStages.Created ||
             bet.stage == BetStages.Accepted ||
-            // Participants should always be able to cancel the bet after 1 year
+            // Participants should be able to cancel non settled bets after 1 year
             // in order to mitigate the risk of participant drop off
             // locking the state of the bet
-            now.sub(bet.createdAt) > oneYearInSeconds);
+            bet.stage != BetStages.Settled && now.sub(bet.createdAt) > oneYearInSeconds);
     // Bets can be cancelled by either proposer or acceptor
     require(msg.sender == bet.proposer || msg.sender == bet.acceptor);
 
