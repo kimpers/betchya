@@ -70,6 +70,27 @@ contract("Betchya", accounts => {
       assert.equal(bet.judge, judge, "Judge address");
     });
 
+    it("should create a bet with data param", async () => {
+      await betchya.createDataBet(
+        acceptor,
+        judge,
+        "Challenged!",
+        web3.toHex("HELLO_WORLD"),
+        {
+          from: proposer,
+          value: 1
+        }
+      );
+
+      const bet = await betchya.bets.call(betIndex).then(toBetObject);
+      assert.equal(bet.stage, "Created");
+      assert.equal(bet.result, "NotSettled");
+      assert.equal(bet.proposer, proposer, "Proposer address");
+      assert.equal(bet.acceptor, acceptor, "Acceptor address");
+      assert.equal(bet.judge, judge, "Judge address");
+      assert.equal(web3.toAscii(bet.data), "HELLO_WORLD", "correct data");
+    });
+
     it("should fail on bets with empty description", async () => {
       await assertFailed(() =>
         betchya.createBet(acceptor, judge, "", {

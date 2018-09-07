@@ -15,7 +15,7 @@ contract Betchya is CircuitBreaker {
     address acceptor;
     address judge;
     uint256 amount;
-    string description;
+    bytes data;
     BetStages stage;
     BetResults result;
     bool proposerWithdrawn;
@@ -125,12 +125,19 @@ contract Betchya is CircuitBreaker {
 
   Bet[] public bets;
 
+  function createBet(address acceptor, address judge, string description)
+    public
+    contractStarted
+    payable
+  {
+    createDataBet(acceptor, judge, description, "");
+  }
   /**
   * @dev Creates a bet between the sender and acceptor
   * @param acceptor Address of the person being challenged
   * @param judge Address of the person judging the challenge
   */
-  function createBet(address acceptor, address judge, string description)
+  function createDataBet(address acceptor, address judge, string description, bytes data)
     public
     contractStarted
     payable
@@ -154,7 +161,7 @@ contract Betchya is CircuitBreaker {
       acceptor,
       judge,
       msg.value,
-      description,
+      data,
       BetStages.Created,
       BetResults.NotSettled,
       false,
@@ -207,17 +214,22 @@ contract Betchya is CircuitBreaker {
     emit LogBetJudgeConfirmed(betsIndex);
   }
 
-  /**
-  * @dev Returns the description string for a bet
-  * @param betsIndex Current bet's element index in the bets array
-  */
-  function getBetDescription(uint betsIndex)
+  function getDataLength(uint betsIndex)
     public
     view
     contractStarted
-    returns (string)
+    returns (uint)
   {
-    return bets[betsIndex].description;
+    return bets[betsIndex].data.length;
+  }
+
+  function getDataIndex(uint betsIndex, uint dataIndex)
+    public
+    view
+    contractStarted
+    returns (byte)
+  {
+    return bets[betsIndex].data[dataIndex];
   }
 
   /**
