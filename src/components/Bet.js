@@ -35,7 +35,9 @@ const canCancelBet = (bet, account) =>
 const canWithdrawCancelled = (bet, account) =>
   bet.stage === STAGE_CANCELLED &&
   ((bet.proposer === account && !bet.proposerWithdrawn) ||
-    (bet.acceptor === account && !bet.acceptorWithdrawn));
+    (bet.acceptor === account &&
+      bet.acceptorDeposited &&
+      !bet.acceptorWithdrawn));
 
 const canWithdrawWon = (bet, account) =>
   bet.stage === STAGE_SETTLED &&

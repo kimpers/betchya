@@ -25,8 +25,6 @@ contract("Betchya", accounts => {
       from: acceptor,
       value: web3.toWei(1, "ether")
     });
-
-    await betchya.confirmJudge(betIndex, { from: judge });
   };
 
   describe("createBet", () => {
@@ -143,7 +141,7 @@ contract("Betchya", accounts => {
       );
 
       const bet = await betchya.bets.call(betIndex).then(toBetObject);
-      assert.equal(bet.stage, "Accepted");
+      assert.equal(bet.stage, "InProgress");
     });
 
     it("it should fail if caller is not acceptor", async () => {
@@ -211,92 +209,6 @@ contract("Betchya", accounts => {
     });
   });
 
-  describe("confirmJudge", () => {
-    it("should allow judge address to accept judge position", async () => {
-      const judgeConfirmedWatcher = betchya.LogBetJudgeConfirmed();
-
-      // Create and accept bet before confirming judge
-      await betchya.createBet(acceptor, judge, "Challenged!", {
-        from: proposer,
-        value: 1
-      });
-
-      await betchya.acceptBet(betIndex, {
-        from: acceptor,
-        value: 1
-      });
-
-      await betchya.confirmJudge(betIndex, { from: judge });
-
-      const events = await judgeConfirmedWatcher.get();
-      assert.equal(events.length, 1, "1 JudgeConfirmed event");
-      assert.equal(events[0].args.betsIndex, betIndex, "betIndex is unchanged");
-
-      const bet = await betchya.bets.call(betIndex).then(toBetObject);
-      assert.equal(bet.stage, "InProgress");
-    });
-
-    it("should fail if caller is not judge", async () => {
-      // Create and accept bet before confirming judge
-      await betchya.createBet(acceptor, judge, "Challenged!", {
-        from: proposer,
-        value: 1
-      });
-
-      await betchya.acceptBet(betIndex, {
-        from: acceptor,
-        value: 1
-      });
-
-      await assertFailed(() =>
-        betchya.confirmJudge(betIndex, { from: otherAccount })
-      );
-
-      // Assert no change in bet state
-      const bet = await betchya.bets.call(betIndex).then(toBetObject);
-      assert.equal(bet.stage, "Accepted");
-      assert.equal(bet.result, "NotSettled");
-    });
-
-    describe("circuit breaker", () => {
-      it("should not allow confirm judge when contract is in onlyWithdrawal stage", async () => {
-        await betchya.createBet(acceptor, judge, "Challenged!", {
-          from: proposer,
-          value: 1
-        });
-
-        await betchya.acceptBet(betIndex, {
-          from: acceptor,
-          value: 1
-        });
-
-        await betchya.onlyWithdrawal({ from: owner });
-
-        await assertFailed(() =>
-          betchya.confirmJudge(betIndex, { from: judge })
-        );
-      });
-
-      it("should not allow confirm judge when contract is in stopped stage", async () => {
-        await betchya.createBet(acceptor, judge, "Challenged!", {
-          from: proposer,
-          value: 1
-        });
-
-        await betchya.acceptBet(betIndex, {
-          from: acceptor,
-          value: 1
-        });
-
-        await betchya.onlyWithdrawal({ from: owner });
-
-        await assertFailed(() =>
-          betchya.confirmJudge(betIndex, { from: judge })
-        );
-      });
-    });
-  });
-
   describe("settleBet", () => {
     it("should settle bet if called by the judge", async () => {
       const betSettledWatcher = betchya.LogBetSettled();
@@ -310,8 +222,6 @@ contract("Betchya", accounts => {
         from: acceptor,
         value: 1
       });
-
-      await betchya.confirmJudge(betIndex, { from: judge });
 
       const betResult = "ProposerWon";
       await betchya.settleBet(betIndex, resultNameToValue(betResult), {
@@ -339,8 +249,6 @@ contract("Betchya", accounts => {
         value: 1
       });
 
-      await betchya.confirmJudge(betIndex, { from: judge });
-
       const betResult = "ProposerWon";
       await assertFailed(() =>
         betchya.settleBet(betIndex, resultNameToValue(betResult), {
@@ -365,8 +273,6 @@ contract("Betchya", accounts => {
         from: acceptor,
         value: 1
       });
-
-      await betchya.confirmJudge(betIndex, { from: judge });
 
       const betResult = "NotSettled";
       await assertFailed(() =>
@@ -450,52 +356,6 @@ contract("Betchya", accounts => {
       assert.equal(bet.stage, "Cancelled");
     });
 
-    it("should cancel a bet if called by proposer in accepted stage", async () => {
-      await betchya.createBet(acceptor, judge, "Challenged!", {
-        from: proposer,
-        value: 1
-      });
-
-      await betchya.acceptBet(betIndex, { from: acceptor, value: 1 });
-
-      const betCancelledWatcher = betchya.LogBetCancelled();
-
-      await betchya.cancelBet(betIndex, {
-        from: proposer
-      });
-
-      const events = await betCancelledWatcher.get();
-
-      assert.equal(events.length, 1, "1 LogBetCancelled event");
-      assert.equal(events[0].args.betsIndex, betIndex, "betsIndex is correct");
-
-      const bet = await betchya.bets.call(betIndex).then(toBetObject);
-      assert.equal(bet.stage, "Cancelled");
-    });
-
-    it("should cancel a bet if called by acceptor in accepted stage", async () => {
-      await betchya.createBet(acceptor, judge, "Challenged!", {
-        from: proposer,
-        value: 1
-      });
-
-      await betchya.acceptBet(betIndex, { from: acceptor, value: 1 });
-
-      const betCancelledWatcher = betchya.LogBetCancelled();
-
-      await betchya.cancelBet(betIndex, {
-        from: acceptor
-      });
-
-      const events = await betCancelledWatcher.get();
-
-      assert.equal(events.length, 1, "1 LogBetCancelled event");
-      assert.equal(events[0].args.betsIndex, betIndex, "betsIndex is correct");
-
-      const bet = await betchya.bets.call(betIndex).then(toBetObject);
-      assert.equal(bet.stage, "Cancelled");
-    });
-
     it("should fail to cancel a bet if called by anyone else", async () => {
       await betchya.createBet(acceptor, judge, "Challenged!", {
         from: proposer,
@@ -511,7 +371,7 @@ contract("Betchya", accounts => {
       );
 
       const bet = await betchya.bets.call(betIndex).then(toBetObject);
-      assert.equal(bet.stage, "Accepted");
+      assert.equal(bet.stage, "InProgress");
     });
     it("should fail to cancel a bet if in progress stage", async () => {
       await betchya.createBet(acceptor, judge, "Challenged!", {
@@ -520,8 +380,6 @@ contract("Betchya", accounts => {
       });
 
       await betchya.acceptBet(betIndex, { from: acceptor, value: 1 });
-
-      await betchya.confirmJudge(betIndex, { from: judge });
 
       await assertFailed(() =>
         betchya.cancelBet(betIndex, {
@@ -748,25 +606,6 @@ contract("Betchya", accounts => {
           1,
           "Proposer receives initial deposit funds after withdrawing on draw"
         );
-
-        const balanceAcceptor = web3
-          .fromWei(web3.eth.getBalance(acceptor), "ether")
-          .toNumber();
-        await betchya.withdraw(betIndex, { from: acceptor });
-        const newBalanceAcceptor = web3
-          .fromWei(web3.eth.getBalance(acceptor), "ether")
-          .toNumber();
-
-        await assertFailed(() =>
-          betchya.withdraw(betIndex, { from: acceptor })
-        );
-
-        // Round to results to full ether to ignore transaction costs
-        assert.equal(
-          Math.round(newBalanceAcceptor - balanceAcceptor),
-          1,
-          "Acceptor receives initial deposit funds after withdrawing on draw"
-        );
       });
 
       it("should not let other accounts withdraw", async () => {
@@ -790,11 +629,6 @@ contract("Betchya", accounts => {
           value: web3.toWei(1, "ether")
         });
 
-        await betchya.acceptBet(betIndex, {
-          from: acceptor,
-          value: web3.toWei(1, "ether")
-        });
-
         await betchya.cancelBet(betIndex, { from: acceptor });
 
         const balanceProposer = web3
@@ -811,21 +645,6 @@ contract("Betchya", accounts => {
           1,
           "Proposer receives initial deposit funds after withdrawing on cancelled"
         );
-
-        const balanceAcceptor = web3
-          .fromWei(web3.eth.getBalance(acceptor), "ether")
-          .toNumber();
-        await betchya.withdraw(betIndex, { from: acceptor });
-        const newBalanceAcceptor = web3
-          .fromWei(web3.eth.getBalance(acceptor), "ether")
-          .toNumber();
-
-        // Round to results to full ether to ignore transaction costs
-        assert.equal(
-          Math.round(newBalanceAcceptor - balanceAcceptor),
-          1,
-          "Acceptor receives initial deposit funds after withdrawing on cancelled"
-        );
       });
 
       it("should not allow acceptor or proposer to withdraw twice", async () => {
@@ -834,12 +653,7 @@ contract("Betchya", accounts => {
           value: web3.toWei(1, "ether")
         });
 
-        await betchya.acceptBet(betIndex, {
-          from: acceptor,
-          value: web3.toWei(1, "ether")
-        });
-
-        await betchya.cancelBet(betIndex, { from: acceptor });
+        await betchya.cancelBet(betIndex, { from: proposer });
 
         const balanceProposer = web3
           .fromWei(web3.eth.getBalance(proposer), "ether")
@@ -859,35 +673,11 @@ contract("Betchya", accounts => {
           1,
           "Proposer receives initial deposit funds after withdrawing on cancelled"
         );
-
-        const balanceAcceptor = web3
-          .fromWei(web3.eth.getBalance(acceptor), "ether")
-          .toNumber();
-        await betchya.withdraw(betIndex, { from: acceptor });
-        const newBalanceAcceptor = web3
-          .fromWei(web3.eth.getBalance(acceptor), "ether")
-          .toNumber();
-
-        await assertFailed(() =>
-          betchya.withdraw(betIndex, { from: acceptor })
-        );
-
-        // Round to results to full ether to ignore transaction costs
-        assert.equal(
-          Math.round(newBalanceAcceptor - balanceAcceptor),
-          1,
-          "Acceptor receives initial deposit funds after withdrawing on cancelled"
-        );
       });
 
       it("should not let other accounts withdraw", async () => {
         await betchya.createBet(acceptor, judge, "Challenged!", {
           from: proposer,
-          value: web3.toWei(1, "ether")
-        });
-
-        await betchya.acceptBet(betIndex, {
-          from: acceptor,
           value: web3.toWei(1, "ether")
         });
 

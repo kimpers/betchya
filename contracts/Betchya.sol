@@ -193,8 +193,8 @@ contract Betchya is CircuitBreaker {
     require(msg.value == bet.amount);
     bet.acceptorDeposited = true;
 
-    // Transition into "Accepted" stage
-    bet.stage = BetStages.Accepted;
+    // Transition into "InProgress" stage
+    bet.stage = BetStages.InProgress;
     emit LogBetAccepted(betsIndex);
   }
 
@@ -268,7 +268,6 @@ contract Betchya is CircuitBreaker {
 
     // Only allow bet to be cancelled before it's in progress
     require(bet.stage == BetStages.Created ||
-            bet.stage == BetStages.Accepted ||
             // Participants should be able to cancel non settled bets after 1 year
             // in order to mitigate the risk of participant drop off
             // locking the state of the bet

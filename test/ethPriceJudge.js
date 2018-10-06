@@ -65,23 +65,10 @@ contract.skip("EthPriceJudge", accounts => {
     });
   });
 
-  describe("confirmJudge", () => {
-    it("it should confirm judge when starting bet", async () => {
-      await createConfirmedBet(10);
-      const judgeConfirmedWatcher = betchya.LogBetJudgeConfirmed();
-      await ethPriceJudge.confirmJudge(betIndex);
-      const events = judgeConfirmedWatcher.get();
-      assert.equal(events.length, 1, "1 Judge confirmed event");
-      const args = events[0].args;
-      assert.equal(args.betsIndex.toNumber(), 0, "Correct betsIndex");
-    });
-  });
-
   describe("judge", () => {
     it("should judge proposer as winner if current price is higher than judge price", async () => {
       // Setup bet for judging
       await createConfirmedBet(10);
-      await ethPriceJudge.confirmJudge(betIndex);
       await updateAndGetPrice();
 
       const betSettledWatcher = betchya.LogBetSettled();
@@ -101,7 +88,6 @@ contract.skip("EthPriceJudge", accounts => {
     it("should judge acceptor as winner if current price is lower than judge price", async () => {
       // Setup bet for judging
       await createConfirmedBet(1000);
-      await ethPriceJudge.confirmJudge(betIndex);
       await updateAndGetPrice();
 
       const betSettledWatcher = betchya.LogBetSettled();
